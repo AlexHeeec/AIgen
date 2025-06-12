@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import { FaSearch, FaEdit, FaTrash, FaFileExcel } from "react-icons/fa"
+import { FaSearch, FaEdit, FaTrash, FaFileExcel, FaClipboardList, FaRocket } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
 import { Input, TextArea } from "@/components/ui/input"
 import { exportTestCasesToExcel, type ExportConfig, defaultExportConfig } from "@/utils/excel-export"
@@ -108,6 +108,25 @@ export default function TestCasePreview({
     return items.map((item, index) => `${index + 1}. ${item}`).join("\n")
   }
 
+  // Empty state when no test cases
+  if (testCases.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full py-16 px-4">
+        <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+          <FaClipboardList className="text-blue-500" size={32} />
+        </div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-3">No Test Cases Generated</h3>
+        <p className="text-gray-500 text-center mb-6 max-w-md">
+          Upload your requirements documents or enter text to generate comprehensive test cases automatically.
+        </p>
+        <div className="flex items-center text-sm text-gray-400 bg-gray-50 px-4 py-2 rounded-lg">
+          <FaRocket className="mr-2" size={14} />
+          <span>Ready to generate test cases from your requirements</span>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="space-y-4">
       {/* Total Test Cases Count */}
@@ -196,7 +215,15 @@ export default function TestCasePreview({
             {/* Table Body */}
             <div className="divide-y divide-gray-200">
               {filteredTestCases.length === 0 ? (
-                <div className="text-center py-12 text-gray-500 col-span-full">No test cases match your filters</div>
+                <div className="flex flex-col items-center justify-center py-16 px-4">
+                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <FaSearch className="text-gray-400" size={20} />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Matching Test Cases</h3>
+                  <p className="text-sm text-gray-500 text-center">
+                    Try adjusting your search terms or filters to find test cases.
+                  </p>
+                </div>
               ) : (
                 filteredTestCases.map((testCase, index) => (
                   <div

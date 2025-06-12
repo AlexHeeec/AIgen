@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useRef, useEffect } from "react"
-import { FaPaperPlane, FaRobot, FaUser } from "react-icons/fa"
+import { FaPaperPlane, FaRobot, FaUser, FaComments, FaMagic } from "react-icons/fa"
 import type { ExportConfig } from "@/utils/excel-export"
 
 interface Message {
@@ -145,6 +145,25 @@ export default function AIChatInterface({
         onVersionSelect(version)
       }
     }
+  }
+
+  // Show empty state when no messages (shouldn't happen with default message, but just in case)
+  if (messages.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full py-16 px-4">
+        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
+          <FaComments className="text-blue-500" size={24} />
+        </div>
+        <h3 className="text-lg font-medium text-gray-900 mb-2">AI Assistant Ready</h3>
+        <p className="text-sm text-gray-500 text-center mb-4">
+          Start a conversation with the AI assistant to refine and improve your test cases.
+        </p>
+        <div className="flex items-center text-xs text-gray-400 bg-gray-50 px-3 py-2 rounded-lg">
+          <FaMagic className="mr-2" size={12} />
+          <span>Ask me to modify, add, or improve test cases</span>
+        </div>
+      </div>
+    )
   }
 
   return (
