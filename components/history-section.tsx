@@ -1,6 +1,6 @@
 "use client"
 
-import { FaFilePdf, FaFileWord, FaFileAlt, FaTrash, FaHistory, FaPlus } from "react-icons/fa"
+import { FaFilePdf, FaFileWord, FaFileAlt, FaTrash, FaHistory } from "react-icons/fa"
 
 interface HistoryItem {
   id: string
@@ -54,13 +54,6 @@ export default function HistorySection({
             <FaHistory className="text-gray-400" size={24} />
           </div>
           <h3 className="text-lg font-medium text-gray-900 mb-2">No History Yet</h3>
-          <p className="text-sm text-gray-500 text-center mb-4">
-            Upload files or enter text requirements to start generating test cases. Your history will appear here.
-          </p>
-          <div className="flex items-center text-xs text-gray-400">
-            <FaPlus className="mr-1" size={10} />
-            <span>Upload files or enter text to get started</span>
-          </div>
         </div>
       </div>
     )

@@ -488,39 +488,49 @@ export default function WorkspacePage() {
 
             {/* Compact History List */}
             <div className="flex-1 overflow-auto p-2">
-              <div className="space-y-2">
-                {/* History items */}
-                {tasks.map((task) => (
-                  <button
-                    key={task.id}
-                    onClick={() => handleTaskSelect(task.id)}
-                    className={`w-full p-2 rounded transition-colors text-left ${
-                      selectedTaskId === task.id
-                        ? "bg-blue-100 border-2 border-blue-300"
-                        : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
-                    }`}
-                    title={task.title}
-                  >
-                    <div className="flex flex-col items-center space-y-1">
-                      {/* File type icon */}
-                      <div className="flex items-center justify-center">{getFileIcon(task.type)}</div>
+              {tasks.length === 0 ? (
+                /* Empty state for collapsed history */
+                <div className="flex flex-col items-center justify-center h-full py-8">
+                  <div className="w-12 h-12 bg-gray-100 rounded-full flex items-center justify-center mb-3">
+                    <FaHistory className="text-gray-400" size={16} />
+                  </div>
+                  <div className="text-xs font-medium text-gray-600 text-center">No History Yet</div>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  {/* History items */}
+                  {tasks.map((task) => (
+                    <button
+                      key={task.id}
+                      onClick={() => handleTaskSelect(task.id)}
+                      className={`w-full p-2 rounded transition-colors text-left ${
+                        selectedTaskId === task.id
+                          ? "bg-blue-100 border-2 border-blue-300"
+                          : "bg-gray-50 hover:bg-gray-100 border-2 border-transparent"
+                      }`}
+                      title={task.title}
+                    >
+                      <div className="flex flex-col items-center space-y-1">
+                        {/* File type icon */}
+                        <div className="flex items-center justify-center">{getFileIcon(task.type)}</div>
 
-                      {/* Abbreviated title */}
-                      <div className="text-xs text-gray-700 text-center leading-tight">
-                        {task.title.length > 12 ? `${task.title.substring(0, 12)}...` : task.title}
+                        {/* Abbreviated title */}
+                        <div className="text-xs text-gray-700 text-center leading-tight">
+                          {task.title.length > 12 ? `${task.title.substring(0, 12)}...` : task.title}
+                        </div>
+
+                        {/* Version indicator */}
+                        <div className="text-xs text-gray-500">v{task.version}</div>
+
+                        {/* Date */}
+                        <div className="text-xs text-gray-400">
+                          {new Date(task.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
+                        </div>
                       </div>
-
-                      {/* Version indicator */}
-                      <div className="text-xs text-gray-500">v{task.version}</div>
-
-                      {/* Date */}
-                      <div className="text-xs text-gray-400">
-                        {new Date(task.date).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
-                      </div>
-                    </div>
-                  </button>
-                ))}
-              </div>
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
         </div>
