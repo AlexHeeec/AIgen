@@ -11,10 +11,12 @@ import {
   FaPlus,
   FaCheck,
   FaTimes,
+  FaFileAlt,
 } from "react-icons/fa"
 import { Button } from "@/components/ui/button"
 import { Input, TextArea } from "@/components/ui/input"
 import { exportTestCasesToExcel, type ExportConfig, defaultExportConfig } from "@/utils/excel-export"
+import { getFileIcon } from "@/utils/file-icon"
 
 interface TestCase {
   id: string
@@ -34,6 +36,7 @@ interface TestCasePreviewProps {
   onVersionSelect: (version: number) => void
   taskTitle: string
   exportConfig?: ExportConfig
+  selectedTask?: any
 }
 
 interface InlineEditState {
@@ -60,6 +63,7 @@ export default function TestCasePreview({
   onVersionSelect,
   taskTitle,
   exportConfig = defaultExportConfig,
+  selectedTask,
 }: TestCasePreviewProps) {
   const [searchText, setSearchText] = useState("")
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null)
@@ -79,6 +83,7 @@ export default function TestCasePreview({
     expectedResults: [""],
     priority: "Medium",
   })
+  const [showOriginalContent, setShowOriginalContent] = useState(false)
 
   // Filter test cases based on search text, priority filter, and type filter
   const filteredTestCases = useMemo(() => {
@@ -170,8 +175,13 @@ export default function TestCasePreview({
       return
     }
 
-    // In a real app, you would call your API to update the field
-    console.log("Updating field:", inlineEdit.field, "for test case:", inlineEdit.testCaseId, "to:", inlineEdit.value)
+    // Handle array fields (steps and expectedResults)
+    if (inlineEdit.field === "steps" || inlineEdit.field === "expectedResults") {
+      const arrayValue = inlineEdit.value.split("\n").filter((item) => item.trim())
+      console.log("Updating field:", inlineEdit.field, "for test case:", inlineEdit.testCaseId, "to:", arrayValue)
+    } else {
+      console.log("Updating field:", inlineEdit.field, "for test case:", inlineEdit.testCaseId, "to:", inlineEdit.value)
+    }
 
     setInlineEdit(null)
     showSuccessMessage()
@@ -278,6 +288,98 @@ export default function TestCasePreview({
     )
   }
 
+  // Render inline editable select cell for Type and Priority
+  const renderEditableSelectCell = (
+    testCase: TestCase,
+    field: string,
+    value: string,
+    options: string[],
+    className = "",
+  ) => {
+    const isEditing = inlineEdit?.testCaseId === testCase.id && inlineEdit?.field === field
+
+    if (isEditing) {
+      return (
+        <div className="relative">
+          <select
+            value={inlineEdit.value}
+            onChange={(e) => setInlineEdit({ ...inlineEdit, value: e.target.value })}
+            onBlur={handleInlineEditSave}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                handleInlineEditSave()
+              } else if (e.key === "Escape") {
+                handleInlineEditCancel()
+              }
+            }}
+            className="w-full px-2 py-1 border border-blue-500 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            autoFocus
+          >
+            {options.map((option) => (
+              <option key={option} value={option}>
+                {option}
+              </option>
+            ))}
+          </select>
+        </div>
+      )
+    }
+
+    return (
+      <div className="flex justify-center">
+        <span
+          className={`inline-block px-3 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-80 ${className}`}
+          onClick={() => handleInlineEdit(testCase.id, field, value)}
+          title="Click to edit"
+        >
+          {value}
+        </span>
+      </div>
+    )
+  }
+
+  // Render inline editable textarea cell for Test Steps and Expected Results
+  const renderEditableTextareaCell = (testCase: TestCase, field: string, value: string[], className = "") => {
+    const isEditing = inlineEdit?.testCaseId === testCase.id && inlineEdit?.field === field
+    const displayValue = formatListWithNumbers(value)
+
+    if (isEditing) {
+      return (
+        <div className="relative">
+          <textarea
+            value={inlineEdit.value}
+            onChange={(e) => setInlineEdit({ ...inlineEdit, value: e.target.value })}
+            onBlur={handleInlineEditSave}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && e.ctrlKey) {
+                handleInlineEditSave()
+              } else if (e.key === "Escape") {
+                handleInlineEditCancel()
+              }
+            }}
+            className={`w-full px-2 py-1 border rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none ${
+              !inlineEdit.value.trim() ? "border-red-500 bg-red-50" : "border-blue-500"
+            }`}
+            rows={4}
+            autoFocus
+            placeholder="Enter each item on a new line"
+          />
+          <div className="text-xs text-gray-500 mt-1">Press Ctrl+Enter to save, Esc to cancel</div>
+        </div>
+      )
+    }
+
+    return (
+      <div
+        className={`cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors ${className}`}
+        onClick={() => handleInlineEdit(testCase.id, field, value.join("\n"))}
+        title="Click to edit"
+      >
+        {displayValue}
+      </div>
+    )
+  }
+
   // Empty state when no test cases
   if (testCases.length === 0) {
     return (
@@ -299,23 +401,7 @@ export default function TestCasePreview({
 
   return (
     <div className="space-y-4">
-      {/* Total Test Cases Count and Add Button */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-sm font-medium">
-          <span>
-            Total Test Cases: <span className="font-bold">{filteredTestCases.length}</span>
-          </span>
-        </div>
-        <button
-          onClick={() => setShowAddDialog(true)}
-          className="flex items-center bg-blue-500 text-white px-3 py-2 rounded-md hover:bg-blue-600 transition-colors text-sm"
-        >
-          <FaPlus className="mr-2" size={12} />
-          Add
-        </button>
-      </div>
-
-      {/* Search and Filter Controls */}
+      {/* Search and Filter Controls with Add Button */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {/* Search */}
         <div className="relative flex-grow max-w-xs">
@@ -355,6 +441,20 @@ export default function TestCasePreview({
           <option value="Low">Low</option>
         </select>
 
+        {/* Spacer to push buttons to the right */}
+        <div className="flex-grow"></div>
+
+        {/* View Original Content Button */}
+        {selectedTask && (
+          <button
+            onClick={() => setShowOriginalContent(true)}
+            className="flex items-center text-gray-700 bg-white hover:bg-gray-50 px-3 py-2 rounded border border-gray-300 hover:border-blue-300 text-sm"
+          >
+            <FaFileAlt className="mr-2 text-blue-600" size={14} />
+            <span>View Original</span>
+          </button>
+        )}
+
         {/* Export Button */}
         <button
           onClick={handleExport}
@@ -373,170 +473,175 @@ export default function TestCasePreview({
             </>
           )}
         </button>
+
+        {/* Add Button */}
+        <button
+          onClick={() => setShowAddDialog(true)}
+          className="flex items-center bg-blue-500 text-white px-3 py-2 rounded-md hover:bg-blue-600 transition-colors text-sm"
+        >
+          <FaPlus className="mr-2" size={12} />
+          Add
+        </button>
       </div>
 
       {/* Test Cases Table with Horizontal Scroll */}
       <div className="border border-gray-200 rounded-md overflow-hidden">
         <div className="overflow-x-auto">
-          <div className="min-w-[1400px]">
+          <table className="min-w-[1400px] w-full">
             {/* Table Header */}
-            <div className="bg-gray-100 border-b border-gray-200">
-              <div className="flex">
-                <div className="w-16 px-4 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-center">
+            <thead className="bg-gray-100 border-b border-gray-200">
+              <tr>
+                <th className="w-16 px-4 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-center">
                   No
-                </div>
-                <div className="w-48 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200">
+                </th>
+                <th className="w-48 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-left">
                   Test Case Name
-                </div>
-                <div className="w-40 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200">
+                </th>
+                <th className="w-40 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-left">
                   Functional Module
-                </div>
-                <div className="w-32 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200">Type</div>
-                <div className="w-24 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200">
+                </th>
+                <th className="w-32 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-center">
+                  Type
+                </th>
+                <th className="w-24 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-center">
                   Priority
-                </div>
-                <div className="w-56 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200">
+                </th>
+                <th className="w-56 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-left">
                   Preconditions
-                </div>
-                <div className="w-80 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200">
+                </th>
+                <th className="w-80 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-left">
                   Test Steps
-                </div>
-                <div className="w-80 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200">
+                </th>
+                <th className="w-80 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-left">
                   Expected Results
-                </div>
-                <div className="w-24 px-6 py-4 font-medium text-sm text-gray-700 text-center">Actions</div>
-              </div>
-            </div>
+                </th>
+                <th className="w-24 px-6 py-4 font-medium text-sm text-gray-700 text-center">Actions</th>
+              </tr>
+            </thead>
 
             {/* Table Body */}
-            <div className="divide-y divide-gray-200">
+            <tbody className="divide-y divide-gray-200">
               {filteredTestCases.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-4">
-                  <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                    <FaSearch className="text-gray-400" size={20} />
-                  </div>
-                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Matching Test Cases</h3>
-                  <p className="text-sm text-gray-500 text-center">
-                    Try adjusting your search terms or filters to find test cases.
-                  </p>
-                </div>
+                <tr>
+                  <td colSpan={9} className="py-16 px-4">
+                    <div className="flex flex-col items-center justify-center">
+                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                        <FaSearch className="text-gray-400" size={20} />
+                      </div>
+                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Matching Test Cases</h3>
+                      <p className="text-sm text-gray-500 text-center">
+                        Try adjusting your search terms or filters to find test cases.
+                      </p>
+                    </div>
+                  </td>
+                </tr>
               ) : (
                 filteredTestCases.map((testCase, index) => (
-                  <div
+                  <tr
                     key={testCase.id}
                     className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition-colors`}
                   >
-                    <div className="flex">
-                      {/* No */}
-                      <div className="w-16 px-4 py-5 border-r border-gray-200 text-center">
-                        <div className="text-sm font-medium text-gray-900">{index + 1}</div>
-                      </div>
+                    {/* No */}
+                    <td className="w-16 px-4 py-5 border-r border-gray-200 text-center">
+                      <div className="text-sm font-medium text-gray-900">{index + 1}</div>
+                    </td>
 
-                      {/* Test Case Name */}
-                      <div className="w-48 px-6 py-5 border-r border-gray-200">
-                        {renderEditableCell(
-                          testCase,
-                          "name",
-                          testCase.name,
-                          "font-medium text-gray-900 break-words leading-relaxed",
-                        )}
-                      </div>
+                    {/* Test Case Name */}
+                    <td className="w-48 px-6 py-5 border-r border-gray-200">
+                      {renderEditableCell(
+                        testCase,
+                        "name",
+                        testCase.name,
+                        "font-medium text-gray-900 break-words leading-relaxed",
+                      )}
+                    </td>
 
-                      {/* Functional Module */}
-                      <div className="w-40 px-6 py-5 border-r border-gray-200">
-                        {renderEditableCell(
-                          testCase,
-                          "functionalModule",
-                          testCase.functionalModule,
-                          "text-gray-600 break-words leading-relaxed text-sm",
-                        )}
-                      </div>
+                    {/* Functional Module */}
+                    <td className="w-40 px-6 py-5 border-r border-gray-200">
+                      {renderEditableCell(
+                        testCase,
+                        "functionalModule",
+                        testCase.functionalModule,
+                        "text-gray-600 break-words leading-relaxed text-sm",
+                      )}
+                    </td>
 
-                      {/* Type */}
-                      <div className="w-32 px-6 py-5 border-r border-gray-200">
-                        <div className="flex justify-center">
-                          <span
-                            className={`inline-block px-3 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-80 ${getTypeColor(testCase.type)}`}
-                            onClick={() => handleInlineEdit(testCase.id, "type", testCase.type)}
-                            title="Click to edit"
-                          >
-                            {testCase.type}
-                          </span>
-                        </div>
-                      </div>
+                    {/* Type */}
+                    <td className="w-32 px-6 py-5 border-r border-gray-200">
+                      {renderEditableSelectCell(
+                        testCase,
+                        "type",
+                        testCase.type,
+                        ["Positive Case", "Negative Case", "Corner Case"],
+                        getTypeColor(testCase.type),
+                      )}
+                    </td>
 
-                      {/* Priority */}
-                      <div className="w-24 px-6 py-5 border-r border-gray-200">
-                        <div className="flex justify-center">
-                          <span
-                            className={`inline-block px-3 py-1 text-xs font-semibold rounded-full cursor-pointer hover:opacity-80 ${getPriorityColor(testCase.priority)}`}
-                            onClick={() => handleInlineEdit(testCase.id, "priority", testCase.priority)}
-                            title="Click to edit"
-                          >
-                            {testCase.priority}
-                          </span>
-                        </div>
-                      </div>
+                    {/* Priority */}
+                    <td className="w-24 px-6 py-5 border-r border-gray-200">
+                      {renderEditableSelectCell(
+                        testCase,
+                        "priority",
+                        testCase.priority,
+                        ["High", "Medium", "Low"],
+                        getPriorityColor(testCase.priority),
+                      )}
+                    </td>
 
-                      {/* Preconditions */}
-                      <div className="w-56 px-6 py-5 border-r border-gray-200">
-                        {renderEditableCell(
-                          testCase,
-                          "preconditions",
-                          testCase.preconditions || "None",
-                          "text-gray-600 break-words whitespace-pre-line leading-relaxed text-sm",
-                        )}
-                      </div>
+                    {/* Preconditions */}
+                    <td className="w-56 px-6 py-5 border-r border-gray-200">
+                      {renderEditableCell(
+                        testCase,
+                        "preconditions",
+                        testCase.preconditions || "None",
+                        "text-gray-600 break-words whitespace-pre-line leading-relaxed text-sm",
+                      )}
+                    </td>
 
-                      {/* Test Steps */}
-                      <div className="w-80 px-6 py-5 border-r border-gray-200">
-                        <div
-                          className="text-gray-600 break-words whitespace-pre-line leading-relaxed text-sm cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors"
-                          onClick={() => handleInlineEdit(testCase.id, "steps", testCase.steps.join("\n"))}
-                          title="Click to edit"
+                    {/* Test Steps */}
+                    <td className="w-80 px-6 py-5 border-r border-gray-200">
+                      {renderEditableTextareaCell(
+                        testCase,
+                        "steps",
+                        testCase.steps,
+                        "text-gray-600 break-words whitespace-pre-line leading-relaxed text-sm",
+                      )}
+                    </td>
+
+                    {/* Expected Results */}
+                    <td className="w-80 px-6 py-5 border-r border-gray-200">
+                      {renderEditableTextareaCell(
+                        testCase,
+                        "expectedResults",
+                        testCase.expectedResults,
+                        "text-gray-600 break-words whitespace-pre-line leading-relaxed text-sm",
+                      )}
+                    </td>
+
+                    {/* Actions */}
+                    <td className="w-24 px-6 py-5">
+                      <div className="flex items-center justify-center space-x-3">
+                        <button
+                          onClick={() => handleEditTestCase(testCase)}
+                          className="text-blue-500 hover:text-blue-700 p-2 rounded hover:bg-blue-100 transition-colors"
+                          title="Edit"
                         >
-                          {formatListWithNumbers(testCase.steps)}
-                        </div>
-                      </div>
-
-                      {/* Expected Results */}
-                      <div className="w-80 px-6 py-5 border-r border-gray-200">
-                        <div
-                          className="text-gray-600 break-words whitespace-pre-line leading-relaxed text-sm cursor-pointer hover:bg-gray-100 px-2 py-1 rounded transition-colors"
-                          onClick={() =>
-                            handleInlineEdit(testCase.id, "expectedResults", testCase.expectedResults.join("\n"))
-                          }
-                          title="Click to edit"
+                          <FaEdit size={14} />
+                        </button>
+                        <button
+                          onClick={() => setDeleteConfirmation(testCase.id)}
+                          className="text-gray-500 hover:text-red-600 p-2 rounded hover:bg-red-100 transition-colors"
+                          title="Delete"
                         >
-                          {formatListWithNumbers(testCase.expectedResults)}
-                        </div>
+                          <FaTrash size={14} />
+                        </button>
                       </div>
-
-                      {/* Actions */}
-                      <div className="w-24 px-6 py-5">
-                        <div className="flex items-center justify-center space-x-3">
-                          <button
-                            onClick={() => handleEditTestCase(testCase)}
-                            className="text-blue-500 hover:text-blue-700 p-2 rounded hover:bg-blue-100 transition-colors"
-                            title="Edit"
-                          >
-                            <FaEdit size={14} />
-                          </button>
-                          <button
-                            onClick={() => setDeleteConfirmation(testCase.id)}
-                            className="text-gray-500 hover:text-red-600 p-2 rounded hover:bg-red-100 transition-colors"
-                            title="Delete"
-                          >
-                            <FaTrash size={14} />
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                    </td>
+                  </tr>
                 ))
               )}
-            </div>
-          </div>
+            </tbody>
+          </table>
         </div>
 
         {/* Scroll Indicator */}
@@ -901,6 +1006,72 @@ export default function TestCasePreview({
                 className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
               >
                 Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* View Original Content Dialog */}
+      {showOriginalContent && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-medium">Original Content</h3>
+              <button onClick={() => setShowOriginalContent(false)} className="text-gray-400 hover:text-gray-600">
+                <FaTimes size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
+                <div className="p-3 bg-gray-50 rounded-md text-sm">{selectedTask?.title || "No title available"}</div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">File Type</label>
+                <div className="p-3 bg-gray-50 rounded-md text-sm flex items-center">
+                  {getFileIcon(selectedTask?.type || "Text")}
+                  <span className="ml-2">{selectedTask?.type || "Text"}</span>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Date Created</label>
+                <div className="p-3 bg-gray-50 rounded-md text-sm">
+                  {selectedTask?.date ? new Date(selectedTask.date).toLocaleDateString() : "No date available"}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Original Requirements</label>
+                <div className="p-4 bg-gray-50 rounded-md text-sm max-h-96 overflow-y-auto">
+                  <p className="text-gray-600 italic mb-4">
+                    This would contain the original uploaded file content or text input from the user.
+                  </p>
+                  <div className="space-y-2 text-gray-700">
+                    <p>
+                      <strong>Sample Requirements Content:</strong>
+                    </p>
+                    <p>• User authentication and login functionality</p>
+                    <p>• Password validation and security requirements</p>
+                    <p>• Session management and timeout handling</p>
+                    <p>• Error handling for invalid credentials</p>
+                    <p>• Multi-factor authentication support</p>
+                    <p>• Password reset functionality</p>
+                    <p>• Account lockout after failed attempts</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="flex justify-end mt-6">
+              <button
+                onClick={() => setShowOriginalContent(false)}
+                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+              >
+                Close
               </button>
             </div>
           </div>
