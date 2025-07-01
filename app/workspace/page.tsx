@@ -589,7 +589,9 @@ export default function WorkspacePage() {
               <h2 className="text-lg font-semibold">Generated Test Cases</h2>
               {selectedTask && (
                 <button
-                  onClick={() => setShowViewOriginal(true)}
+                  onClick={() => {
+                    /* 这个功能现在由TestCasePreview组件内部处理 */
+                  }}
                   className="flex items-center text-gray-600 hover:text-blue-600 px-2 py-1 rounded border border-gray-200 hover:border-blue-300 text-sm"
                 >
                   <FaFileAlt className="mr-1" size={12} />
@@ -645,7 +647,6 @@ export default function WorkspacePage() {
                 onExportRequest={handleExportRequest}
                 exportConfig={exportConfig}
                 selectedTask={selectedTask}
-                showViewOriginal={showViewOriginal}
               />
             )}
           </div>
