@@ -18,6 +18,7 @@ import {
   FaFileWord,
   FaFileAlt,
   FaTimes,
+  FaCopy,
 } from "react-icons/fa"
 
 // Mock data structure with version-specific test cases
@@ -28,6 +29,33 @@ const mockTasks = [
     date: "2025-03-20",
     type: "PDF",
     version: 1,
+    content: `User Authentication System Requirements
+
+1. Login Functionality
+   - Users must be able to log in using email and password
+   - System should validate credentials against the database
+   - Invalid login attempts should display appropriate error messages
+   - After 3 failed attempts, account should be temporarily locked for 15 minutes
+
+2. Password Requirements
+   - Minimum 8 characters
+   - Must contain at least one uppercase letter, one lowercase letter, and one number
+   - Special characters are optional but recommended
+
+3. Session Management
+   - User sessions should expire after 30 minutes of inactivity
+   - Users should be able to log out manually
+   - System should remember login state for "Remember Me" option (up to 30 days)
+
+4. Security Features
+   - All passwords must be encrypted using bcrypt
+   - Login attempts should be logged for security monitoring
+   - Two-factor authentication should be supported (optional)
+
+5. User Interface
+   - Login form should be responsive and work on all devices
+   - Clear error messages for validation failures
+   - Loading indicators during authentication process`,
     versionedTestCases: {
       1: [
         {
@@ -72,6 +100,42 @@ const mockTasks = [
     date: "2025-03-18",
     type: "Text",
     version: 2,
+    content: `User Profile Management System
+
+Overview:
+The user profile module allows users to view and update their personal information, manage account settings, and customize their experience.
+
+Core Features:
+
+1. Profile Information Management
+   - Users can view their current profile information
+   - Users can edit basic information: name, email, phone number, address
+   - Profile picture upload and management
+   - Bio/description field (optional, max 500 characters)
+
+2. Account Settings
+   - Change password functionality
+   - Email notification preferences
+   - Privacy settings (public/private profile)
+   - Account deactivation option
+
+3. Validation Rules
+   - Email must be unique and valid format
+   - Phone number must follow international format
+   - Name fields are required and must be at least 2 characters
+   - Password changes require current password verification
+
+4. Security Features
+   - All changes require password confirmation for sensitive data
+   - Email verification for email address changes
+   - Activity log for profile changes
+   - Data encryption for sensitive information
+
+5. User Experience
+   - Real-time validation feedback
+   - Auto-save for non-critical changes
+   - Confirmation dialogs for important changes
+   - Mobile-responsive design`,
     versionedTestCases: {
       1: [
         {
@@ -152,6 +216,48 @@ const mockTasks = [
     date: "2025-03-15",
     type: "Word",
     version: 3,
+    content: `Payment Gateway Integration Requirements
+
+Project Scope:
+Integrate a secure payment gateway to handle online transactions for the e-commerce platform.
+
+Technical Requirements:
+
+1. Supported Payment Methods
+   - Credit/Debit Cards (Visa, MasterCard, American Express)
+   - Digital Wallets (PayPal, Apple Pay, Google Pay)
+   - Bank transfers and ACH payments
+   - Buy now, pay later options (Klarna, Afterpay)
+
+2. Security Standards
+   - PCI DSS compliance mandatory
+   - SSL/TLS encryption for all transactions
+   - Tokenization of sensitive payment data
+   - 3D Secure authentication for card payments
+
+3. Transaction Processing
+   - Real-time payment processing
+   - Automatic retry mechanism for failed payments
+   - Refund and partial refund capabilities
+   - Transaction status tracking and notifications
+
+4. Error Handling
+   - Graceful handling of payment failures
+   - Clear error messages for users
+   - Automatic fallback to alternative payment methods
+   - Timeout handling for slow connections
+
+5. Integration Features
+   - Webhook support for payment status updates
+   - API rate limiting and throttling
+   - Comprehensive logging and monitoring
+   - Multi-currency support
+
+6. User Experience
+   - One-click payments for returning customers
+   - Mobile-optimized payment flow
+   - Progress indicators during payment process
+   - Email confirmations and receipts`,
     versionedTestCases: {
       1: [
         {
@@ -281,6 +387,54 @@ const mockTasks = [
     date: "2025-03-10",
     type: "Text",
     version: 1,
+    content: `Analytics Dashboard Requirements
+
+Purpose:
+Create a comprehensive analytics dashboard that provides insights into user behavior, system performance, and business metrics.
+
+Dashboard Components:
+
+1. Key Performance Indicators (KPIs)
+   - Total active users (daily, weekly, monthly)
+   - Revenue metrics and conversion rates
+   - System uptime and performance metrics
+   - Customer satisfaction scores
+
+2. Data Visualization
+   - Interactive charts and graphs
+   - Real-time data updates
+   - Customizable date range filters
+   - Export functionality for reports
+
+3. User Analytics
+   - User engagement metrics
+   - Page views and session duration
+   - User journey mapping
+   - Demographic breakdowns
+
+4. System Metrics
+   - Server response times
+   - Error rates and types
+   - Database performance
+   - API usage statistics
+
+5. Business Intelligence
+   - Sales trends and forecasting
+   - Product performance analysis
+   - Customer acquisition costs
+   - Retention rate analysis
+
+6. Customization Features
+   - Personalized dashboard layouts
+   - Custom metric definitions
+   - Automated report scheduling
+   - Alert notifications for threshold breaches
+
+Technical Requirements:
+- Real-time data processing
+- Responsive design for all devices
+- Role-based access control
+- Data export in multiple formats (PDF, Excel, CSV)`,
     versionedTestCases: {
       1: [
         {
@@ -404,6 +558,18 @@ export default function WorkspacePage() {
         date: new Date().toISOString().split("T")[0],
         type: Math.random() > 0.5 ? "PDF" : "Text",
         version: 1,
+        content: `Sample Requirements Document
+
+This is a sample requirements document that was uploaded by the user. It contains detailed specifications for a new feature or system that needs to be implemented.
+
+Key Features:
+1. User authentication and authorization
+2. Data management and storage
+3. User interface design requirements
+4. Performance and scalability requirements
+5. Security and compliance standards
+
+The system should be able to handle multiple users simultaneously and provide a responsive user experience across different devices and platforms.`,
         versionedTestCases: {
           1: [
             {
@@ -498,6 +664,20 @@ export default function WorkspacePage() {
 
   const handleMouseUp = () => {
     setIsDragging(false)
+  }
+
+  const handleCopyContent = () => {
+    if (selectedTask?.content) {
+      navigator.clipboard
+        .writeText(selectedTask.content)
+        .then(() => {
+          // You could add a toast notification here
+          console.log("Content copied to clipboard")
+        })
+        .catch((err) => {
+          console.error("Failed to copy content: ", err)
+        })
+    }
   }
 
   // 添加事件监听器
@@ -725,7 +905,7 @@ export default function WorkspacePage() {
       {showDraggableOriginal && (
         <div className="fixed inset-0 z-50">
           <div
-            className="draggable-dialog absolute bg-white rounded-lg shadow-2xl border border-gray-300 w-96 max-h-[80vh] overflow-hidden"
+            className="draggable-dialog absolute bg-white rounded-lg shadow-2xl border border-gray-300 w-[600px] max-h-[80vh] overflow-hidden"
             style={{
               left: `${dragPosition.x}px`,
               top: `${dragPosition.y}px`,
@@ -739,49 +919,56 @@ export default function WorkspacePage() {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center space-x-2">
-                  <FaFileAlt className="text-blue-600" size={14} />
-                  <h3 className="font-medium text-gray-900">Original Content</h3>
+                  <FaFileAlt className="text-blue-600" size={16} />
+                  <h3 className="font-medium text-gray-900">Original Requirements</h3>
+                  <span className="text-sm text-gray-500">({selectedTask?.type})</span>
                 </div>
-                <button
-                  onClick={() => setShowDraggableOriginal(false)}
-                  className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-200"
-                >
-                  <FaTimes size={14} />
-                </button>
+                <div className="flex items-center space-x-2">
+                  <button
+                    onClick={handleCopyContent}
+                    className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-200"
+                    title="Copy to clipboard"
+                  >
+                    <FaCopy size={14} />
+                  </button>
+                  <button
+                    onClick={() => setShowDraggableOriginal(false)}
+                    className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-200"
+                  >
+                    <FaTimes size={14} />
+                  </button>
+                </div>
               </div>
             </div>
 
             {/* Content */}
             <div className="p-4 overflow-y-auto max-h-[calc(80vh-60px)]">
               <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
-                  <div className="p-2 bg-gray-50 rounded text-sm">{selectedTask?.title || "No title available"}</div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">File Type</label>
-                  <div className="p-2 bg-gray-50 rounded text-sm flex items-center">
-                    {getFileIcon(selectedTask?.type || "Text")}
-                    <span className="ml-2">{selectedTask?.type || "Text"}</span>
+                {/* Task Title */}
+                <div className="border-b border-gray-200 pb-3">
+                  <h4 className="font-semibold text-gray-900 mb-1">{selectedTask?.title}</h4>
+                  <div className="text-sm text-gray-500">
+                    Created: {selectedTask?.date ? new Date(selectedTask.date).toLocaleDateString() : "Unknown"}
                   </div>
                 </div>
 
+                {/* Original Content */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date Created</label>
-                  <div className="p-2 bg-gray-50 rounded text-sm">
-                    {selectedTask?.date ? new Date(selectedTask.date).toLocaleDateString() : "No date available"}
+                  <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
+                    <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
+                      {selectedTask?.content || "No content available"}
+                    </div>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Original Content</label>
-                  <div className="p-3 bg-gray-50 rounded text-sm max-h-64 overflow-y-auto">
-                    <div className="space-y-2 text-gray-700">
-                      <p className="font-medium text-gray-800">Original Content:</p>
-                      <div className="pl-2 border-l-2 border-blue-200">
-                        <p>{selectedTask?.content || "No content available"}</p>
-                      </div>
+                {/* Content Stats */}
+                <div className="border-t border-gray-200 pt-3">
+                  <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
+                    <div>
+                      <span className="font-medium">Characters:</span> {selectedTask?.content?.length || 0}
+                    </div>
+                    <div>
+                      <span className="font-medium">Words:</span> {selectedTask?.content?.split(/\s+/).length || 0}
                     </div>
                   </div>
                 </div>
@@ -790,7 +977,9 @@ export default function WorkspacePage() {
 
             {/* Footer */}
             <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
-              <div className="text-xs text-gray-500 text-center">Drag the header to move this window</div>
+              <div className="text-xs text-gray-500 text-center">
+                This is the original content used to generate test cases • Drag the header to move
+              </div>
             </div>
           </div>
         </div>
