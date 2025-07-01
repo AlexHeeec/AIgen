@@ -444,6 +444,12 @@ export default function TestCasePreview({
 
   return (
     <div className="space-y-4">
+      {/* Test Cases Count - Single Row */}
+      <div className="mb-3">
+        <div className="text-sm font-medium text-gray-600">
+          Total Test Cases: <span className="font-bold text-gray-900">{filteredTestCases.length}</span>
+        </div>
+      </div>
       {/* Search and Filter Controls with Add Button */}
       <div className="flex flex-wrap items-center gap-2 mb-4">
         {/* Search */}
@@ -486,11 +492,6 @@ export default function TestCasePreview({
 
         {/* Spacer to push buttons to the right */}
         <div className="flex-grow"></div>
-
-        {/* Total Test Cases Count */}
-        <div className="text-sm font-medium text-gray-600">
-          Total: <span className="font-bold">{filteredTestCases.length}</span>
-        </div>
 
         {/* Export Button */}
         <button
