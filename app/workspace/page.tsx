@@ -632,6 +632,7 @@ export default function WorkspacePage() {
                 taskTitle={selectedTask?.title || ""}
                 onExportRequest={handleExportRequest}
                 exportConfig={exportConfig}
+                selectedTask={selectedTask}
               />
             )}
           </div>

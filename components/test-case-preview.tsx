@@ -1,6 +1,8 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import type React from "react"
+
+import { useState, useMemo, useEffect } from "react"
 import {
   FaSearch,
   FaEdit,
@@ -84,6 +86,11 @@ export default function TestCasePreview({
     priority: "Medium",
   })
   const [showOriginalContent, setShowOriginalContent] = useState(false)
+
+  const [showDraggableSource, setShowDraggableSource] = useState(false)
+  const [dragPosition, setDragPosition] = useState({ x: 100, y: 100 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
 
   // Filter test cases based on search text, priority filter, and type filter
   const filteredTestCases = useMemo(() => {
@@ -379,6 +386,42 @@ export default function TestCasePreview({
       </div>
     )
   }
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    const rect = (e.target as HTMLElement).closest(".draggable-dialog")?.getBoundingClientRect()
+    if (rect) {
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      })
+    }
+  }
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      setDragPosition({
+        x: e.clientX - dragOffset.x,
+        y: e.clientY - dragOffset.y,
+      })
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  // 添加事件监听器
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove)
+      document.addEventListener("mouseup", handleMouseUp)
+      return () => {
+        document.removeEventListener("mousemove", handleMouseMove)
+        document.removeEventListener("mouseup", handleMouseUp)
+      }
+    }
+  }, [isDragging, dragOffset])
 
   // Empty state when no test cases
   if (testCases.length === 0) {
@@ -1012,67 +1055,100 @@ export default function TestCasePreview({
         </div>
       )}
 
-      {/* View Original Content Dialog */}
-      {showOriginalContent && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-lg font-medium">Original Content</h3>
-              <button onClick={() => setShowOriginalContent(false)} className="text-gray-400 hover:text-gray-600">
-                <FaTimes size={20} />
-              </button>
+      {/* Draggable Source Content Dialog */}
+      {showDraggableSource && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className="draggable-dialog absolute bg-white rounded-lg shadow-2xl border border-gray-300 w-96 max-h-[80vh] overflow-hidden"
+            style={{
+              left: `${dragPosition.x}px`,
+              top: `${dragPosition.y}px`,
+              cursor: isDragging ? "grabbing" : "default",
+            }}
+          >
+            {/* Draggable Header */}
+            <div
+              className="bg-gray-100 px-4 py-3 border-b border-gray-200 cursor-grab active:cursor-grabbing select-none"
+              onMouseDown={handleMouseDown}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <FaFileAlt className="text-blue-600" size={14} />
+                  <h3 className="font-medium text-gray-900">Source Content</h3>
+                </div>
+                <button
+                  onClick={() => setShowDraggableSource(false)}
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-200"
+                >
+                  <FaTimes size={14} />
+                </button>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
-                <div className="p-3 bg-gray-50 rounded-md text-sm">{selectedTask?.title || "No title available"}</div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">File Type</label>
-                <div className="p-3 bg-gray-50 rounded-md text-sm flex items-center">
-                  {getFileIcon(selectedTask?.type || "Text")}
-                  <span className="ml-2">{selectedTask?.type || "Text"}</span>
+            {/* Content */}
+            <div className="p-4 overflow-y-auto max-h-[calc(80vh-60px)]">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
+                  <div className="p-2 bg-gray-50 rounded text-sm">{selectedTask?.title || "No title available"}</div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Date Created</label>
-                <div className="p-3 bg-gray-50 rounded-md text-sm">
-                  {selectedTask?.date ? new Date(selectedTask.date).toLocaleDateString() : "No date available"}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">File Type</label>
+                  <div className="p-2 bg-gray-50 rounded text-sm flex items-center">
+                    {getFileIcon(selectedTask?.type || "Text")}
+                    <span className="ml-2">{selectedTask?.type || "Text"}</span>
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Original Requirements</label>
-                <div className="p-4 bg-gray-50 rounded-md text-sm max-h-96 overflow-y-auto">
-                  <p className="text-gray-600 italic mb-4">
-                    This would contain the original uploaded file content or text input from the user.
-                  </p>
-                  <div className="space-y-2 text-gray-700">
-                    <p>
-                      <strong>Sample Requirements Content:</strong>
-                    </p>
-                    <p>• User authentication and login functionality</p>
-                    <p>• Password validation and security requirements</p>
-                    <p>• Session management and timeout handling</p>
-                    <p>• Error handling for invalid credentials</p>
-                    <p>• Multi-factor authentication support</p>
-                    <p>• Password reset functionality</p>
-                    <p>• Account lockout after failed attempts</p>
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Date Created</label>
+                  <div className="p-2 bg-gray-50 rounded text-sm">
+                    {selectedTask?.date ? new Date(selectedTask.date).toLocaleDateString() : "No date available"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Parsed Requirements</label>
+                  <div className="p-3 bg-gray-50 rounded text-sm max-h-64 overflow-y-auto">
+                    <div className="space-y-2 text-gray-700">
+                      <p className="font-medium text-gray-800">Extracted Requirements:</p>
+                      <div className="pl-2 border-l-2 border-blue-200">
+                        <p>• User authentication and login functionality</p>
+                        <p>• Password validation with minimum 8 characters</p>
+                        <p>• Session management with 30-minute timeout</p>
+                        <p>• Error handling for invalid credentials</p>
+                        <p>• Multi-factor authentication support</p>
+                        <p>• Password reset via email verification</p>
+                        <p>• Account lockout after 3 failed attempts</p>
+                        <p>• Remember me functionality for 30 days</p>
+                        <p>• Logout functionality with session cleanup</p>
+                      </div>
+
+                      <p className="font-medium text-gray-800 mt-4">Business Rules:</p>
+                      <div className="pl-2 border-l-2 border-green-200">
+                        <p>• Passwords must contain uppercase, lowercase, and numbers</p>
+                        <p>• Failed login attempts are logged for security</p>
+                        <p>• Session tokens expire after inactivity</p>
+                        <p>• Password reset links expire after 1 hour</p>
+                      </div>
+
+                      <p className="font-medium text-gray-800 mt-4">Technical Constraints:</p>
+                      <div className="pl-2 border-l-2 border-orange-200">
+                        <p>• Must support modern browsers (Chrome, Firefox, Safari)</p>
+                        <p>• Response time should be under 2 seconds</p>
+                        <p>• Must be mobile responsive</p>
+                        <p>• HTTPS required for all authentication endpoints</p>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
-            <div className="flex justify-end mt-6">
-              <button
-                onClick={() => setShowOriginalContent(false)}
-                className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-              >
-                Close
-              </button>
+            {/* Footer */}
+            <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
+              <div className="text-xs text-gray-500 text-center">Drag the header to move this window</div>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
+import type React from "react"
 import { FaFilePdf, FaFileWord, FaFileAlt } from "react-icons/fa"
 
-export const getFileIcon = (type: string) => {
+export const getFileIcon = (type: string): React.ReactElement => {
   switch (type) {
     case "PDF":
       return <FaFilePdf className="text-red-500" size={12} />
