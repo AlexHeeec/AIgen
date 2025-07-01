@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import WorkspaceLayout from "@/components/workspace-layout"
 import UploadSection from "@/components/upload-section"
@@ -15,6 +17,7 @@ import {
   FaFilePdf,
   FaFileWord,
   FaFileAlt,
+  FaTimes,
 } from "react-icons/fa"
 
 // Mock data structure with version-specific test cases
@@ -334,6 +337,10 @@ export default function WorkspacePage() {
   const [exportConfig, setExportConfig] = useState<ExportConfig>(defaultExportConfig)
   const [showVersionDropdown, setShowVersionDropdown] = useState(false)
   const [requirementsExpanded, setRequirementsExpanded] = useState(true) // Default to expanded
+  const [showDraggableOriginal, setShowDraggableOriginal] = useState(false)
+  const [dragPosition, setDragPosition] = useState({ x: 100, y: 100 })
+  const [isDragging, setIsDragging] = useState(false)
+  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
 
   // Find the selected task or default to the first one
   const selectedTask = selectedTaskId ? tasks.find((task) => task.id === selectedTaskId) : tasks[0]
@@ -469,6 +476,42 @@ export default function WorkspacePage() {
     setSelectedVersion(null) // Reset to latest version when switching tasks
   }
 
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true)
+    const rect = (e.target as HTMLElement).closest(".draggable-dialog")?.getBoundingClientRect()
+    if (rect) {
+      setDragOffset({
+        x: e.clientX - rect.left,
+        y: e.clientY - rect.top,
+      })
+    }
+  }
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      setDragPosition({
+        x: e.clientX - dragOffset.x,
+        y: e.clientY - dragOffset.y,
+      })
+    }
+  }
+
+  const handleMouseUp = () => {
+    setIsDragging(false)
+  }
+
+  // 添加事件监听器
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove)
+      document.addEventListener("mouseup", handleMouseUp)
+      return () => {
+        document.removeEventListener("mousemove", handleMouseMove)
+        document.removeEventListener("mouseup", handleMouseUp)
+      }
+    }
+  }, [isDragging, dragOffset])
+
   // Get icon for file type
   const getFileIcon = (type: string) => {
     switch (type) {
@@ -584,7 +627,18 @@ export default function WorkspacePage() {
       >
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full flex flex-col">
           <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg flex items-center justify-between">
-            <h2 className="text-lg font-semibold">Generated Test Cases</h2>
+            <div className="flex items-center space-x-3">
+              <h2 className="text-lg font-semibold">Generated Test Cases</h2>
+              {selectedTask && (
+                <button
+                  onClick={() => setShowDraggableOriginal(true)}
+                  className="flex items-center text-gray-600 hover:text-blue-600 px-2 py-1 rounded border border-gray-200 hover:border-blue-300 text-sm"
+                >
+                  <FaFileAlt className="mr-1" size={12} />
+                  <span>View Original</span>
+                </button>
+              )}
+            </div>
             <div className="relative version-dropdown">
               <button
                 onClick={() => setShowVersionDropdown(!showVersionDropdown)}
@@ -666,6 +720,81 @@ export default function WorkspacePage() {
           </div>
         </div>
       </div>
+
+      {/* Draggable Original Content Dialog */}
+      {showDraggableOriginal && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className="draggable-dialog absolute bg-white rounded-lg shadow-2xl border border-gray-300 w-96 max-h-[80vh] overflow-hidden"
+            style={{
+              left: `${dragPosition.x}px`,
+              top: `${dragPosition.y}px`,
+              cursor: isDragging ? "grabbing" : "default",
+            }}
+          >
+            {/* Draggable Header */}
+            <div
+              className="bg-gray-100 px-4 py-3 border-b border-gray-200 cursor-grab active:cursor-grabbing select-none"
+              onMouseDown={handleMouseDown}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <FaFileAlt className="text-blue-600" size={14} />
+                  <h3 className="font-medium text-gray-900">Original Content</h3>
+                </div>
+                <button
+                  onClick={() => setShowDraggableOriginal(false)}
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-200"
+                >
+                  <FaTimes size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 overflow-y-auto max-h-[calc(80vh-60px)]">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
+                  <div className="p-2 bg-gray-50 rounded text-sm">{selectedTask?.title || "No title available"}</div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">File Type</label>
+                  <div className="p-2 bg-gray-50 rounded text-sm flex items-center">
+                    {getFileIcon(selectedTask?.type || "Text")}
+                    <span className="ml-2">{selectedTask?.type || "Text"}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Date Created</label>
+                  <div className="p-2 bg-gray-50 rounded text-sm">
+                    {selectedTask?.date ? new Date(selectedTask.date).toLocaleDateString() : "No date available"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Original Content</label>
+                  <div className="p-3 bg-gray-50 rounded text-sm max-h-64 overflow-y-auto">
+                    <div className="space-y-2 text-gray-700">
+                      <p className="font-medium text-gray-800">Original Content:</p>
+                      <div className="pl-2 border-l-2 border-blue-200">
+                        <p>{selectedTask?.content || "No content available"}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
+              <div className="text-xs text-gray-500 text-center">Drag the header to move this window</div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Delete Task Confirmation Dialog */}
       {showDeleteConfirmation && (

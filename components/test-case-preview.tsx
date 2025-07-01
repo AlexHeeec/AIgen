@@ -487,6 +487,11 @@ export default function TestCasePreview({
         {/* Spacer to push buttons to the right */}
         <div className="flex-grow"></div>
 
+        {/* Total Test Cases Count */}
+        <div className="text-sm font-medium text-gray-600">
+          Total: <span className="font-bold">{filteredTestCases.length}</span>
+        </div>
+
         {/* Export Button */}
         <button
           onClick={handleExport}
@@ -514,24 +519,6 @@ export default function TestCasePreview({
           <FaPlus className="mr-2" size={12} />
           Add
         </button>
-      </div>
-
-      {/* Header with View Original Button */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="text-sm font-medium">
-          <span>
-            Total Test Cases: <span className="font-bold">{filteredTestCases.length}</span>
-          </span>
-        </div>
-        {selectedTask && (
-          <button
-            onClick={() => setShowDraggableOriginal(true)}
-            className="flex items-center text-gray-700 bg-white hover:bg-gray-50 px-3 py-2 rounded border border-gray-300 hover:border-blue-300 text-sm"
-          >
-            <FaFileAlt className="mr-2 text-blue-600" size={14} />
-            <span>View Original</span>
-          </button>
-        )}
       </div>
 
       {/* Test Cases Table with Horizontal Scroll */}
