@@ -18,7 +18,6 @@ import {
   FaFileWord,
   FaFileAlt,
   FaTimes,
-  FaCopy,
 } from "react-icons/fa"
 
 // Mock data structure with version-specific test cases
@@ -666,33 +665,6 @@ The system should be able to handle multiple users simultaneously and provide a 
     setIsDragging(false)
   }
 
-  const handleCopyContent = () => {
-    if (selectedTask?.content) {
-      navigator.clipboard
-        .writeText(selectedTask.content)
-        .then(() => {
-          // You could add a toast notification here
-          console.log("Content copied to clipboard")
-        })
-        .catch((err) => {
-          console.error("Failed to copy content: ", err)
-        })
-    }
-  }
-
-  // 添加事件监听器
-  useEffect(() => {
-    if (isDragging) {
-      document.addEventListener("mousemove", handleMouseMove)
-      document.addEventListener("mouseup", handleMouseUp)
-      return () => {
-        document.removeEventListener("mousemove", handleMouseMove)
-        document.removeEventListener("mouseup", handleMouseUp)
-      }
-    }
-  }, [isDragging, dragOffset])
-
-  // Get icon for file type
   const getFileIcon = (type: string) => {
     switch (type) {
       case "PDF":
@@ -704,6 +676,7 @@ The system should be able to handle multiple users simultaneously and provide a 
     }
   }
 
+  // 删除handleCopyContent函数
   return (
     <WorkspaceLayout>
       {/* Requirements Module - Collapsible */}
@@ -921,16 +894,8 @@ The system should be able to handle multiple users simultaneously and provide a 
                 <div className="flex items-center space-x-2">
                   <FaFileAlt className="text-blue-600" size={16} />
                   <h3 className="font-medium text-gray-900">Original Requirements</h3>
-                  <span className="text-sm text-gray-500">({selectedTask?.type})</span>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <button
-                    onClick={handleCopyContent}
-                    className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-200"
-                    title="Copy to clipboard"
-                  >
-                    <FaCopy size={14} />
-                  </button>
                   <button
                     onClick={() => setShowDraggableOriginal(false)}
                     className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-200"
@@ -957,18 +922,6 @@ The system should be able to handle multiple users simultaneously and provide a 
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
                       {selectedTask?.content || "No content available"}
-                    </div>
-                  </div>
-                </div>
-
-                {/* Content Stats */}
-                <div className="border-t border-gray-200 pt-3">
-                  <div className="grid grid-cols-2 gap-4 text-sm text-gray-600">
-                    <div>
-                      <span className="font-medium">Characters:</span> {selectedTask?.content?.length || 0}
-                    </div>
-                    <div>
-                      <span className="font-medium">Words:</span> {selectedTask?.content?.split(/\s+/).length || 0}
                     </div>
                   </div>
                 </div>
