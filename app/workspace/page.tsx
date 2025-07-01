@@ -676,6 +676,18 @@ The system should be able to handle multiple users simultaneously and provide a 
     }
   }
 
+  // 添加事件监听器
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove)
+      document.addEventListener("mouseup", handleMouseUp)
+      return () => {
+        document.removeEventListener("mousemove", handleMouseMove)
+        document.removeEventListener("mouseup", handleMouseUp)
+      }
+    }
+  }, [isDragging, dragOffset])
+
   // 删除handleCopyContent函数
   return (
     <WorkspaceLayout>
@@ -876,9 +888,9 @@ The system should be able to handle multiple users simultaneously and provide a 
 
       {/* Draggable Original Content Dialog */}
       {showDraggableOriginal && (
-        <div className="fixed inset-0 z-50">
+        <div className="fixed inset-0 z-50 pointer-events-none">
           <div
-            className="draggable-dialog absolute bg-white rounded-lg shadow-2xl border border-gray-300 w-[600px] max-h-[80vh] overflow-hidden"
+            className="draggable-dialog absolute bg-white rounded-lg shadow-2xl border border-gray-300 w-[600px] max-h-[80vh] overflow-hidden pointer-events-auto"
             style={{
               left: `${dragPosition.x}px`,
               top: `${dragPosition.y}px`,
