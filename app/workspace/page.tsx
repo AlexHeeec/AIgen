@@ -30,6 +30,8 @@ const mockTasks = [
         {
           id: "1-1",
           name: "Verify user login with valid credentials",
+          functionalModule: "Authentication",
+          type: "Positive Case",
           preconditions: "User has a valid account in the system",
           steps: ["Navigate to the login page", "Enter valid username and password", "Click on the login button"],
           expectedResults: [
@@ -41,6 +43,8 @@ const mockTasks = [
         {
           id: "1-2",
           name: "Verify user login with invalid credentials",
+          functionalModule: "Authentication",
+          type: "Negative Case",
           preconditions: "User has an account in the system",
           steps: ["Navigate to the login page", "Enter invalid username and password", "Click on the login button"],
           expectedResults: ["Error message should be displayed", "User should remain on the login page"],
@@ -70,6 +74,8 @@ const mockTasks = [
         {
           id: "2-1-v1",
           name: "Verify user can update profile information",
+          functionalModule: "User Management",
+          type: "Positive Case",
           preconditions: "User is logged in to the system",
           steps: ["Navigate to profile page", "Update profile information", "Click save button"],
           expectedResults: ["Success message is displayed", "Profile information is updated"],
@@ -78,6 +84,8 @@ const mockTasks = [
         {
           id: "2-2-v1",
           name: "Verify user can change password",
+          functionalModule: "User Management",
+          type: "Positive Case",
           preconditions: "User is logged in to the system",
           steps: ["Navigate to profile page", "Click change password", "Enter current and new password", "Click save"],
           expectedResults: ["Success message is displayed", "User can login with new password"],
@@ -88,6 +96,8 @@ const mockTasks = [
         {
           id: "2-1-v2",
           name: "Verify user can update profile information",
+          functionalModule: "User Management",
+          type: "Positive Case",
           preconditions: "User is logged in to the system",
           steps: ["Navigate to profile page", "Update profile information", "Click save button"],
           expectedResults: ["Success message is displayed", "Profile information is updated"],
@@ -96,6 +106,8 @@ const mockTasks = [
         {
           id: "2-2-v2",
           name: "Verify user can change password",
+          functionalModule: "User Management",
+          type: "Positive Case",
           preconditions: "User is logged in to the system",
           steps: ["Navigate to profile page", "Click change password", "Enter current and new password", "Click save"],
           expectedResults: ["Success message is displayed", "User can login with new password"],
@@ -104,6 +116,8 @@ const mockTasks = [
         {
           id: "2-3-v2",
           name: "Verify validation for required fields",
+          functionalModule: "User Management",
+          type: "Negative Case",
           preconditions: "User is logged in to the system",
           steps: ["Navigate to profile page", "Clear required fields", "Click save button"],
           expectedResults: ["Validation errors are displayed", "Profile is not updated"],
@@ -140,6 +154,8 @@ const mockTasks = [
         {
           id: "3-1-v1",
           name: "Verify successful payment processing",
+          functionalModule: "Payment",
+          type: "Positive Case",
           preconditions: "User has items in cart and is on checkout page",
           steps: ["Select payment method", "Enter valid payment details", "Click pay now"],
           expectedResults: ["Payment is processed successfully", "Order confirmation is displayed"],
@@ -148,6 +164,8 @@ const mockTasks = [
         {
           id: "3-2-v1",
           name: "Verify payment failure handling",
+          functionalModule: "Payment",
+          type: "Negative Case",
           preconditions: "User has items in cart and is on checkout page",
           steps: ["Select payment method", "Enter invalid payment details", "Click pay now"],
           expectedResults: ["Error message is displayed", "User can retry payment"],
@@ -158,6 +176,8 @@ const mockTasks = [
         {
           id: "3-1-v2",
           name: "Verify successful payment processing",
+          functionalModule: "Payment",
+          type: "Positive Case",
           preconditions: "User has items in cart and is on checkout page",
           steps: ["Select payment method", "Enter valid payment details", "Click pay now"],
           expectedResults: ["Payment is processed successfully", "Order confirmation is displayed"],
@@ -166,6 +186,8 @@ const mockTasks = [
         {
           id: "3-2-v2",
           name: "Verify payment failure handling",
+          functionalModule: "Payment",
+          type: "Negative Case",
           preconditions: "User has items in cart and is on checkout page",
           steps: ["Select payment method", "Enter invalid payment details", "Click pay now"],
           expectedResults: ["Error message is displayed", "User can retry payment"],
@@ -174,6 +196,8 @@ const mockTasks = [
         {
           id: "3-3-v2",
           name: "Verify payment timeout handling",
+          functionalModule: "Payment",
+          type: "Corner Case",
           preconditions: "User has items in cart and is on checkout page",
           steps: ["Select payment method", "Enter valid payment details", "Simulate timeout", "Click pay now"],
           expectedResults: ["Timeout message is displayed", "User can retry payment"],
@@ -184,6 +208,8 @@ const mockTasks = [
         {
           id: "3-1-v3",
           name: "Verify successful payment processing",
+          functionalModule: "Payment",
+          type: "Positive Case",
           preconditions: "User has items in cart and is on checkout page",
           steps: ["Select payment method", "Enter valid payment details", "Click pay now"],
           expectedResults: ["Payment is processed successfully", "Order confirmation is displayed"],
@@ -192,6 +218,8 @@ const mockTasks = [
         {
           id: "3-2-v3",
           name: "Verify payment failure handling",
+          functionalModule: "Payment",
+          type: "Negative Case",
           preconditions: "User has items in cart and is on checkout page",
           steps: ["Select payment method", "Enter invalid payment details", "Click pay now"],
           expectedResults: ["Error message is displayed", "User can retry payment"],
@@ -200,6 +228,8 @@ const mockTasks = [
         {
           id: "3-3-v3",
           name: "Verify payment timeout handling",
+          functionalModule: "Payment",
+          type: "Corner Case",
           preconditions: "User has items in cart and is on checkout page",
           steps: ["Select payment method", "Enter valid payment details", "Simulate timeout", "Click pay now"],
           expectedResults: ["Timeout message is displayed", "User can retry payment"],
@@ -208,6 +238,8 @@ const mockTasks = [
         {
           id: "3-4-v3",
           name: "Verify order history updates after payment",
+          functionalModule: "Order Management",
+          type: "Positive Case",
           preconditions: "User has completed payment for an order",
           steps: ["Navigate to order history", "Find the recent order"],
           expectedResults: ["Order is listed with correct status", "Payment details are correct"],
@@ -251,6 +283,8 @@ const mockTasks = [
         {
           id: "4-1",
           name: "Verify dashboard loads with correct data",
+          functionalModule: "Analytics",
+          type: "Positive Case",
           preconditions: "User is logged in with admin privileges",
           steps: ["Navigate to dashboard", "Check data visualization components"],
           expectedResults: ["All charts and graphs are displayed", "Data matches expected values"],
@@ -259,6 +293,8 @@ const mockTasks = [
         {
           id: "4-2",
           name: "Verify date range filter functionality",
+          functionalModule: "Analytics",
+          type: "Positive Case",
           preconditions: "User is logged in with admin privileges",
           steps: ["Navigate to dashboard", "Change date range filter", "Apply filter"],
           expectedResults: ["Dashboard refreshes with new data", "Data matches selected date range"],
@@ -366,6 +402,8 @@ export default function WorkspacePage() {
             {
               id: `tc-${Date.now()}-1`,
               name: "Verify new functionality works correctly",
+              functionalModule: "General",
+              type: "Positive Case",
               preconditions: "System is in a stable state",
               steps: ["Navigate to the new feature", "Interact with the feature", "Verify the results"],
               expectedResults: ["Feature responds as expected", "Data is processed correctly"],
@@ -374,6 +412,8 @@ export default function WorkspacePage() {
             {
               id: `tc-${Date.now()}-2`,
               name: "Verify error handling in new functionality",
+              functionalModule: "General",
+              type: "Negative Case",
               preconditions: "System is in a stable state",
               steps: ["Navigate to the new feature", "Provide invalid input", "Observe system response"],
               expectedResults: ["Error message is displayed", "System remains stable"],
