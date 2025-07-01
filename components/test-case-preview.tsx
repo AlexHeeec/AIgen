@@ -85,7 +85,7 @@ export default function TestCasePreview({
     expectedResults: [""],
     priority: "Medium",
   })
-  const [showOriginalContent, setShowOriginalContent] = useState(false)
+  const [showDraggableOriginal, setShowDraggableOriginal] = useState(false)
 
   const [showDraggableSource, setShowDraggableSource] = useState(false)
   const [dragPosition, setDragPosition] = useState({ x: 100, y: 100 })
@@ -487,17 +487,6 @@ export default function TestCasePreview({
         {/* Spacer to push buttons to the right */}
         <div className="flex-grow"></div>
 
-        {/* View Original Content Button */}
-        {selectedTask && (
-          <button
-            onClick={() => setShowOriginalContent(true)}
-            className="flex items-center text-gray-700 bg-white hover:bg-gray-50 px-3 py-2 rounded border border-gray-300 hover:border-blue-300 text-sm"
-          >
-            <FaFileAlt className="mr-2 text-blue-600" size={14} />
-            <span>View Original</span>
-          </button>
-        )}
-
         {/* Export Button */}
         <button
           onClick={handleExport}
@@ -525,6 +514,24 @@ export default function TestCasePreview({
           <FaPlus className="mr-2" size={12} />
           Add
         </button>
+      </div>
+
+      {/* Header with View Original Button */}
+      <div className="flex items-center justify-between mb-4">
+        <div className="text-sm font-medium">
+          <span>
+            Total Test Cases: <span className="font-bold">{filteredTestCases.length}</span>
+          </span>
+        </div>
+        {selectedTask && (
+          <button
+            onClick={() => setShowDraggableOriginal(true)}
+            className="flex items-center text-gray-700 bg-white hover:bg-gray-50 px-3 py-2 rounded border border-gray-300 hover:border-blue-300 text-sm"
+          >
+            <FaFileAlt className="mr-2 text-blue-600" size={14} />
+            <span>View Original</span>
+          </button>
+        )}
       </div>
 
       {/* Test Cases Table with Horizontal Scroll */}
@@ -1139,6 +1146,81 @@ export default function TestCasePreview({
                         <p>• Response time should be under 2 seconds</p>
                         <p>• Must be mobile responsive</p>
                         <p>• HTTPS required for all authentication endpoints</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
+              <div className="text-xs text-gray-500 text-center">Drag the header to move this window</div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Draggable Original Content Dialog */}
+      {showDraggableOriginal && (
+        <div className="fixed inset-0 z-50">
+          <div
+            className="draggable-dialog absolute bg-white rounded-lg shadow-2xl border border-gray-300 w-96 max-h-[80vh] overflow-hidden"
+            style={{
+              left: `${dragPosition.x}px`,
+              top: `${dragPosition.y}px`,
+              cursor: isDragging ? "grabbing" : "default",
+            }}
+          >
+            {/* Draggable Header */}
+            <div
+              className="bg-gray-100 px-4 py-3 border-b border-gray-200 cursor-grab active:cursor-grabbing select-none"
+              onMouseDown={handleMouseDown}
+            >
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <FaFileAlt className="text-blue-600" size={14} />
+                  <h3 className="font-medium text-gray-900">Original Content</h3>
+                </div>
+                <button
+                  onClick={() => setShowDraggableOriginal(false)}
+                  className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-200"
+                >
+                  <FaTimes size={14} />
+                </button>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 overflow-y-auto max-h-[calc(80vh-60px)]">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
+                  <div className="p-2 bg-gray-50 rounded text-sm">{selectedTask?.title || "No title available"}</div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">File Type</label>
+                  <div className="p-2 bg-gray-50 rounded text-sm flex items-center">
+                    {getFileIcon(selectedTask?.type || "Text")}
+                    <span className="ml-2">{selectedTask?.type || "Text"}</span>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Date Created</label>
+                  <div className="p-2 bg-gray-50 rounded text-sm">
+                    {selectedTask?.date ? new Date(selectedTask.date).toLocaleDateString() : "No date available"}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">Original Content</label>
+                  <div className="p-3 bg-gray-50 rounded text-sm max-h-64 overflow-y-auto">
+                    <div className="space-y-2 text-gray-700">
+                      <p className="font-medium text-gray-800">Original Content:</p>
+                      <div className="pl-2 border-l-2 border-blue-200">
+                        <p>{selectedTask?.content || "No content available"}</p>
                       </div>
                     </div>
                   </div>
