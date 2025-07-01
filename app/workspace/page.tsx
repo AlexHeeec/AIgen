@@ -334,7 +334,6 @@ export default function WorkspacePage() {
   const [exportConfig, setExportConfig] = useState<ExportConfig>(defaultExportConfig)
   const [showVersionDropdown, setShowVersionDropdown] = useState(false)
   const [requirementsExpanded, setRequirementsExpanded] = useState(true) // Default to expanded
-  const [showViewOriginal, setShowViewOriginal] = useState(false)
 
   // Find the selected task or default to the first one
   const selectedTask = selectedTaskId ? tasks.find((task) => task.id === selectedTaskId) : tasks[0]
@@ -585,20 +584,7 @@ export default function WorkspacePage() {
       >
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full flex flex-col">
           <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <h2 className="text-lg font-semibold">Generated Test Cases</h2>
-              {selectedTask && (
-                <button
-                  onClick={() => {
-                    /* 这个功能现在由TestCasePreview组件内部处理 */
-                  }}
-                  className="flex items-center text-gray-600 hover:text-blue-600 px-2 py-1 rounded border border-gray-200 hover:border-blue-300 text-sm"
-                >
-                  <FaFileAlt className="mr-1" size={12} />
-                  <span>View Original</span>
-                </button>
-              )}
-            </div>
+            <h2 className="text-lg font-semibold">Generated Test Cases</h2>
             <div className="relative version-dropdown">
               <button
                 onClick={() => setShowVersionDropdown(!showVersionDropdown)}
