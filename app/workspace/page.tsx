@@ -785,11 +785,7 @@ The system should be able to handle multiple users simultaneously and provide a 
       )}
 
       {/* Generated Test Cases Module - Responsive width */}
-      <div
-        className={`col-span-12 ${
-          requirementsExpanded ? "md:col-span-6" : "md:col-span-7"
-        } flex flex-col h-full overflow-auto p-3`}
-      >
+      <div className="col-span-12 md:col-span-8 flex flex-col h-full overflow-auto p-3">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full flex flex-col">
           <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -858,12 +854,8 @@ The system should be able to handle multiple users simultaneously and provide a 
         </div>
       </div>
 
-      {/* AI Assistant Module - Responsive width */}
-      <div
-        className={`col-span-12 ${
-          requirementsExpanded ? "md:col-span-3" : "md:col-span-4"
-        } flex flex-col h-full overflow-auto p-3`}
-      >
+      {/* AI Assistant Module */}
+      <div className="col-span-12 md:col-span-4 flex flex-col h-full overflow-auto p-3">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full flex flex-col">
           <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
             <h2 className="text-lg font-semibold">AI Assistant</h2>

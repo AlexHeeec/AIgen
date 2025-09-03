@@ -54,7 +54,7 @@ export default function LoginForm() {
 
       // Show success message
       alert("Login successful!")
-      router.push("/workspace")
+      router.push("/homepage")
     } catch (error) {
       alert("Login failed. Please try again.")
       console.error(error)
@@ -74,7 +74,7 @@ export default function LoginForm() {
 
       // Show success message
       alert("Google login successful!")
-      router.push("/workspace")
+      router.push("/homepage")
     } catch (error) {
       alert("Google login failed. Please try again.")
       console.error(error)
