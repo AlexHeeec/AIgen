@@ -101,34 +101,6 @@ export default function HomePage() {
               </button>
             </div>
           </div>
-
-          {/* Quick Access Links */}
-          <div className="bg-gray-50 rounded-xl p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">Quick Access</h3>
-            <div className="grid md:grid-cols-3 gap-4">
-              <button
-                onClick={() => router.push("/prd-list")}
-                className="text-left p-4 bg-white rounded-lg border border-gray-200 hover:border-blue-300 hover:shadow-md transition-all"
-              >
-                <div className="font-medium text-gray-900">PRD Library</div>
-                <div className="text-sm text-gray-600">View and manage your PRDs</div>
-              </button>
-              <button
-                onClick={() => router.push("/case-task-list")}
-                className="text-left p-4 bg-white rounded-lg border border-gray-200 hover:border-green-300 hover:shadow-md transition-all"
-              >
-                <div className="font-medium text-gray-900">Test Case Tasks</div>
-                <div className="text-sm text-gray-600">Manage generation tasks</div>
-              </button>
-              <button
-                onClick={() => router.push("/case-generation")}
-                className="text-left p-4 bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:shadow-md transition-all"
-              >
-                <div className="font-medium text-gray-900">Workspace</div>
-                <div className="text-sm text-gray-600">Continue working</div>
-              </button>
-            </div>
-          </div>
         </div>
       </div>
 
