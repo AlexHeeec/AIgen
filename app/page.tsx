@@ -3,11 +3,11 @@ import LoginForm from "@/components/login-form"
 
 export default function Home() {
   // In a real app, you would check if the user is already authenticated
-  // and redirect to the workspace if they are
+  // and redirect to the homepage if they are
   const isAuthenticated = false
 
   if (isAuthenticated) {
-    redirect("/workspace")
+    redirect("/homepage")
   }
 
   return (
