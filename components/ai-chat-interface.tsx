@@ -1,6 +1,7 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useRef, useEffect } from "react"
 import { FaPaperPlane, FaRobot, FaUser, FaComments, FaMagic } from "react-icons/fa"
 import type { ExportConfig } from "@/utils/excel-export"
@@ -30,12 +31,13 @@ export default function AIChatInterface({
     id: "default",
     content:
       "Hello! I'm your AI assistant. I can help you refine and adjust the generated test cases. What would you like to modify?",
-    sender: "ai" as const,
+    sender: "ai",
     timestamp: new Date(),
     version: 1,
   }
 
   const [messages, setMessages] = useState<Message[]>(initialMessages.length > 0 ? initialMessages : [defaultMessage])
+
   const [input, setInput] = useState("")
   const [loading, setLoading] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)

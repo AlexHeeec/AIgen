@@ -209,270 +209,10 @@ Core Features:
       },
     ],
   },
-  {
-    id: "3",
-    title: "Payment Gateway Integration",
-    date: "2025-03-15",
-    type: "Word",
-    version: 3,
-    content: `Payment Gateway Integration Requirements
-
-Project Scope:
-Integrate a secure payment gateway to handle online transactions for the e-commerce platform.
-
-Technical Requirements:
-
-1. Supported Payment Methods
-   - Credit/Debit Cards (Visa, MasterCard, American Express)
-   - Digital Wallets (PayPal, Apple Pay, Google Pay)
-   - Bank transfers and ACH payments
-   - Buy now, pay later options (Klarna, Afterpay)
-
-2. Security Standards
-   - PCI DSS compliance mandatory
-   - SSL/TLS encryption for all transactions
-   - Tokenization of sensitive payment data
-   - 3D Secure authentication for card payments
-
-3. Transaction Processing
-   - Real-time payment processing
-   - Automatic retry mechanism for failed payments
-   - Refund and partial refund capabilities
-   - Transaction status tracking and notifications
-
-4. Error Handling
-   - Graceful handling of payment failures
-   - Clear error messages for users
-   - Automatic fallback to alternative payment methods
-   - Timeout handling for slow connections
-
-5. Integration Features
-   - Webhook support for payment status updates
-   - API rate limiting and throttling
-   - Comprehensive logging and monitoring
-   - Multi-currency support
-
-6. User Experience
-   - One-click payments for returning customers
-   - Mobile-optimized payment flow
-   - Progress indicators during payment process
-   - Email confirmations and receipts`,
-    versionedTestCases: {
-      1: [
-        {
-          id: "3-1-v1",
-          name: "Verify successful payment processing",
-          functionalModule: "Payment",
-          type: "Positive Case",
-          preconditions: "User has items in cart and is on checkout page",
-          steps: ["Select payment method", "Enter valid payment details", "Click pay now"],
-          expectedResults: ["Payment is processed successfully", "Order confirmation is displayed"],
-          priority: "High",
-        },
-        {
-          id: "3-2-v1",
-          name: "Verify payment failure handling",
-          functionalModule: "Payment",
-          type: "Negative Case",
-          preconditions: "User has items in cart and is on checkout page",
-          steps: ["Select payment method", "Enter invalid payment details", "Click pay now"],
-          expectedResults: ["Error message is displayed", "User can retry payment"],
-          priority: "High",
-        },
-      ],
-      2: [
-        {
-          id: "3-1-v2",
-          name: "Verify successful payment processing",
-          functionalModule: "Payment",
-          type: "Positive Case",
-          preconditions: "User has items in cart and is on checkout page",
-          steps: ["Select payment method", "Enter valid payment details", "Click pay now"],
-          expectedResults: ["Payment is processed successfully", "Order confirmation is displayed"],
-          priority: "High",
-        },
-        {
-          id: "3-2-v2",
-          name: "Verify payment failure handling",
-          functionalModule: "Payment",
-          type: "Negative Case",
-          preconditions: "User has items in cart and is on checkout page",
-          steps: ["Select payment method", "Enter invalid payment details", "Click pay now"],
-          expectedResults: ["Error message is displayed", "User can retry payment"],
-          priority: "High",
-        },
-        {
-          id: "3-3-v2",
-          name: "Verify payment timeout handling",
-          functionalModule: "Payment",
-          type: "Corner Case",
-          preconditions: "User has items in cart and is on checkout page",
-          steps: ["Select payment method", "Enter valid payment details", "Simulate timeout", "Click pay now"],
-          expectedResults: ["Timeout message is displayed", "User can retry payment"],
-          priority: "Medium",
-        },
-      ],
-      3: [
-        {
-          id: "3-1-v3",
-          name: "Verify successful payment processing",
-          functionalModule: "Payment",
-          type: "Positive Case",
-          preconditions: "User has items in cart and is on checkout page",
-          steps: ["Select payment method", "Enter valid payment details", "Click pay now"],
-          expectedResults: ["Payment is processed successfully", "Order confirmation is displayed"],
-          priority: "High",
-        },
-        {
-          id: "3-2-v3",
-          name: "Verify payment failure handling",
-          functionalModule: "Payment",
-          type: "Negative Case",
-          preconditions: "User has items in cart and is on checkout page",
-          steps: ["Select payment method", "Enter invalid payment details", "Click pay now"],
-          expectedResults: ["Error message is displayed", "User can retry payment"],
-          priority: "High",
-        },
-        {
-          id: "3-3-v3",
-          name: "Verify payment timeout handling",
-          functionalModule: "Payment",
-          type: "Corner Case",
-          preconditions: "User has items in cart and is on checkout page",
-          steps: ["Select payment method", "Enter valid payment details", "Simulate timeout", "Click pay now"],
-          expectedResults: ["Timeout message is displayed", "User can retry payment"],
-          priority: "Medium",
-        },
-        {
-          id: "3-4-v3",
-          name: "Verify order history updates after payment",
-          functionalModule: "Order Management",
-          type: "Positive Case",
-          preconditions: "User has completed payment for an order",
-          steps: ["Navigate to order history", "Find the recent order"],
-          expectedResults: ["Order is listed with correct status", "Payment details are correct"],
-          priority: "Low",
-        },
-      ],
-    },
-    aiMessages: [
-      {
-        id: "3-ai-1",
-        content:
-          "I've analyzed the payment gateway requirements and generated test cases for various payment scenarios. (Version 1)",
-        sender: "ai",
-        timestamp: new Date(),
-        version: 1,
-      },
-      {
-        id: "3-ai-2",
-        content: "I've added test cases for payment failure scenarios as requested. (Version 2)",
-        sender: "ai",
-        timestamp: new Date(),
-        version: 2,
-      },
-      {
-        id: "3-ai-3",
-        content: "I've updated the test cases to include order history verification after payment. (Version 3)",
-        sender: "ai",
-        timestamp: new Date(),
-        version: 3,
-      },
-    ],
-  },
-  {
-    id: "4",
-    title: "Dashboard Analytics",
-    date: "2025-03-10",
-    type: "Text",
-    version: 1,
-    content: `Analytics Dashboard Requirements
-
-Purpose:
-Create a comprehensive analytics dashboard that provides insights into user behavior, system performance, and business metrics.
-
-Dashboard Components:
-
-1. Key Performance Indicators (KPIs)
-   - Total active users (daily, weekly, monthly)
-   - Revenue metrics and conversion rates
-   - System uptime and performance metrics
-   - Customer satisfaction scores
-
-2. Data Visualization
-   - Interactive charts and graphs
-   - Real-time data updates
-   - Customizable date range filters
-   - Export functionality for reports
-
-3. User Analytics
-   - User engagement metrics
-   - Page views and session duration
-   - User journey mapping
-   - Demographic breakdowns
-
-4. System Metrics
-   - Server response times
-   - Error rates and types
-   - Database performance
-   - API usage statistics
-
-5. Business Intelligence
-   - Sales trends and forecasting
-   - Product performance analysis
-   - Customer acquisition costs
-   - Retention rate analysis
-
-6. Customization Features
-   - Personalized dashboard layouts
-   - Custom metric definitions
-   - Automated report scheduling
-   - Alert notifications for threshold breaches
-
-Technical Requirements:
-- Real-time data processing
-- Responsive design for all devices
-- Role-based access control
-- Data export in multiple formats (PDF, Excel, CSV)`,
-    versionedTestCases: {
-      1: [
-        {
-          id: "4-1",
-          name: "Verify dashboard loads with correct data",
-          functionalModule: "Analytics",
-          type: "Positive Case",
-          preconditions: "User is logged in with admin privileges",
-          steps: ["Navigate to dashboard", "Check data visualization components"],
-          expectedResults: ["All charts and graphs are displayed", "Data matches expected values"],
-          priority: "Medium",
-        },
-        {
-          id: "4-2",
-          name: "Verify date range filter functionality",
-          functionalModule: "Analytics",
-          type: "Positive Case",
-          preconditions: "User is logged in with admin privileges",
-          steps: ["Navigate to dashboard", "Change date range filter", "Apply filter"],
-          expectedResults: ["Dashboard refreshes with new data", "Data matches selected date range"],
-          priority: "Medium",
-        },
-      ],
-    },
-    aiMessages: [
-      {
-        id: "4-ai-1",
-        content:
-          "I've analyzed the dashboard analytics requirements and generated test cases for data visualization and filtering functionality. (Version 1)",
-        sender: "ai",
-        timestamp: new Date(),
-        version: 1,
-      },
-    ],
-  },
 ]
 
 // Function to add a new task to the list
-const addNewTask = (tasks, newTask) => {
+const addNewTask = (tasks: any[], newTask: any) => {
   // Add the new task at the beginning of the array
   return [newTask, ...tasks]
 }
@@ -483,13 +223,13 @@ export default function WorkspacePage() {
     [...mockTasks].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
   )
 
-  const [selectedTaskId, setSelectedTaskId] = useState(tasks[0]?.id || null)
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(tasks[0]?.id || null)
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<string | null>(null)
   const [exportConfig, setExportConfig] = useState<ExportConfig>(defaultExportConfig)
   const [showVersionDropdown, setShowVersionDropdown] = useState(false)
-  const [requirementsExpanded, setRequirementsExpanded] = useState(true) // Default to expanded
+  const [requirementsExpanded, setRequirementsExpanded] = useState(true)
   const [showDraggableOriginal, setShowDraggableOriginal] = useState(false)
   const [dragPosition, setDragPosition] = useState({ x: 100, y: 100 })
   const [isDragging, setIsDragging] = useState(false)
@@ -529,7 +269,6 @@ export default function WorkspacePage() {
   }, [showDeleteConfirmation, showVersionDropdown])
 
   const handleDeleteTask = (id: string) => {
-    // In a real app, you would call your API to delete the task
     console.log("Deleting task:", id)
     setShowDeleteConfirmation(null)
 
@@ -540,12 +279,11 @@ export default function WorkspacePage() {
     // If the deleted task is the selected one, select the first task
     if (id === selectedTaskId && updatedTasks.length > 0) {
       setSelectedTaskId(updatedTasks[0].id)
-      setSelectedVersion(null) // Reset to latest version
+      setSelectedVersion(null)
     }
   }
 
   const handleGenerateTestCases = () => {
-    // Start loading immediately without confirmation
     setIsGenerating(true)
 
     // Simulate API call
@@ -610,7 +348,7 @@ The system should be able to handle multiple users simultaneously and provide a 
 
       // Select the new task
       setSelectedTaskId(newTask.id)
-      setSelectedVersion(null) // Reset to latest version
+      setSelectedVersion(null)
 
       setIsGenerating(false)
     }, 3000)
@@ -628,7 +366,6 @@ The system should be able to handle multiple users simultaneously and provide a 
   }
 
   const handleExportRequest = () => {
-    // This will trigger the AI assistant to enter export configuration mode
     console.log("Export customization requested")
   }
 
@@ -638,7 +375,7 @@ The system should be able to handle multiple users simultaneously and provide a 
 
   const handleTaskSelect = (taskId: string) => {
     setSelectedTaskId(taskId)
-    setSelectedVersion(null) // Reset to latest version when switching tasks
+    setSelectedVersion(null)
   }
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -676,7 +413,7 @@ The system should be able to handle multiple users simultaneously and provide a 
     }
   }
 
-  // 添加事件监听器
+  // Add event listeners
   useEffect(() => {
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove)
@@ -688,7 +425,6 @@ The system should be able to handle multiple users simultaneously and provide a 
     }
   }, [isDragging, dragOffset])
 
-  // 删除handleCopyContent函数
   return (
     <WorkspaceLayout>
       {/* Requirements Module - Collapsible */}
@@ -785,7 +521,11 @@ The system should be able to handle multiple users simultaneously and provide a 
       )}
 
       {/* Generated Test Cases Module - Responsive width */}
-      <div className="col-span-12 md:col-span-8 flex flex-col h-full overflow-auto p-3">
+      <div
+        className={`col-span-12 ${
+          requirementsExpanded ? "md:col-span-6" : "md:col-span-7"
+        } flex flex-col h-full overflow-auto p-3`}
+      >
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full flex flex-col">
           <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg flex items-center justify-between">
             <div className="flex items-center space-x-3">
@@ -845,7 +585,6 @@ The system should be able to handle multiple users simultaneously and provide a 
                 availableVersions={availableVersions}
                 onVersionSelect={handleVersionSelect}
                 taskTitle={selectedTask?.title || ""}
-                onExportRequest={handleExportRequest}
                 exportConfig={exportConfig}
                 selectedTask={selectedTask}
               />
@@ -854,8 +593,12 @@ The system should be able to handle multiple users simultaneously and provide a 
         </div>
       </div>
 
-      {/* AI Assistant Module */}
-      <div className="col-span-12 md:col-span-4 flex flex-col h-full overflow-auto p-3">
+      {/* AI Assistant Module - Responsive width */}
+      <div
+        className={`col-span-12 ${
+          requirementsExpanded ? "md:col-span-3" : "md:col-span-4"
+        } flex flex-col h-full overflow-auto p-3`}
+      >
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full flex flex-col">
           <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
             <h2 className="text-lg font-semibold">AI Assistant</h2>
