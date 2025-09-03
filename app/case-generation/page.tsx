@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect } from "react"
 import WorkspaceLayout from "@/components/workspace-layout"
 import TestCasePreview from "@/components/test-case-preview"
@@ -9,7 +8,7 @@ import AIChatInterface from "@/components/ai-chat-interface"
 import { type ExportConfig, defaultExportConfig } from "@/utils/excel-export"
 import { FaHistory, FaChevronDown, FaFileAlt, FaTimes } from "react-icons/fa"
 
-// Mock data structure with version-specific test cases (same as before but updated)
+// Mock data structure with version-specific test cases
 const mockTasks = [
   {
     id: "1",
