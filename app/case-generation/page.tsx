@@ -1,217 +1,117 @@
 "use client"
 
 import type React from "react"
+
 import { useState, useEffect } from "react"
 import WorkspaceLayout from "@/components/workspace-layout"
 import TestCasePreview from "@/components/test-case-preview"
 import AIChatInterface from "@/components/ai-chat-interface"
-import { type ExportConfig, defaultExportConfig } from "@/utils/excel-export"
+import { defaultExportConfig } from "@/utils/excel-export"
 import { FaHistory, FaChevronDown, FaFileAlt, FaTimes } from "react-icons/fa"
 
-// Mock data structure with version-specific test cases
-const mockTasks = [
-  {
-    id: "1",
-    title: "Login Feature Requirements",
-    date: "2025-03-20",
-    type: "PDF",
-    version: 1,
-    content: `User Authentication System Requirements
+interface TestCase {
+  id: string
+  name: string
+  functionalModule: string
+  type: "Positive Case" | "Negative Case" | "Corner Case"
+  preconditions: string
+  steps: string[]
+  expectedResults: string[]
+  priority: "High" | "Medium" | "Low"
+}
 
-1. Login Functionality
-   - Users must be able to log in using email and password
-   - System should validate credentials against the database
-   - Invalid login attempts should display appropriate error messages
-   - After 3 failed attempts, account should be temporarily locked for 15 minutes
+interface Message {
+  id: string
+  content: string
+  sender: "user" | "ai"
+  timestamp: Date
+  version?: number
+}
 
-2. Password Requirements
-   - Minimum 8 characters
-   - Must contain at least one uppercase letter, one lowercase letter, and one number
-   - Special characters are optional but recommended
-
-3. Session Management
-   - User sessions should expire after 30 minutes of inactivity
-   - Users should be able to log out manually
-   - System should remember login state for "Remember Me" option (up to 30 days)
-
-4. Security Features
-   - All passwords must be encrypted using bcrypt
-   - Login attempts should be logged for security monitoring
-   - Two-factor authentication should be supported (optional)
-
-5. User Interface
-   - Login form should be responsive and work on all devices
-   - Clear error messages for validation failures
-   - Loading indicators during authentication process`,
-    versionedTestCases: {
-      1: [
-        {
-          id: "1-1",
-          name: "Verify user login with valid credentials",
-          functionalModule: "Authentication",
-          type: "Positive Case" as const,
-          preconditions: "User has a valid account in the system",
-          steps: ["Navigate to the login page", "Enter valid username and password", "Click on the login button"],
-          expectedResults: [
-            "User should be redirected to the dashboard",
-            "User name should be displayed in the header",
-          ],
-          priority: "High" as const,
-        },
-        {
-          id: "1-2",
-          name: "Verify user login with invalid credentials",
-          functionalModule: "Authentication",
-          type: "Negative Case" as const,
-          preconditions: "User has an account in the system",
-          steps: ["Navigate to the login page", "Enter invalid username and password", "Click on the login button"],
-          expectedResults: ["Error message should be displayed", "User should remain on the login page"],
-          priority: "High" as const,
-        },
-        {
-          id: "1-3",
-          name: "Verify account lockout after failed attempts",
-          functionalModule: "Authentication",
-          type: "Corner Case" as const,
-          preconditions: "User has an account in the system",
-          steps: ["Navigate to the login page", "Enter invalid credentials 3 times", "Try to login again"],
-          expectedResults: ["Account should be locked", "Lockout message should be displayed"],
-          priority: "Medium" as const,
-        },
-      ],
-    },
-    aiMessages: [
-      {
-        id: "1-ai-1",
-        content:
-          "I've analyzed the login feature requirements and generated test cases focusing on authentication flows. (Version 1)",
-        sender: "ai" as const,
-        timestamp: new Date(),
-        version: 1,
-      },
-    ],
-  },
-  {
-    id: "2",
-    title: "User Profile Module",
-    date: "2025-03-18",
-    type: "Text",
-    version: 2,
-    content: `User Profile Management System
-
-Overview:
-The user profile module allows users to view and update their personal information, manage account settings, and customize their experience.
-
-Core Features:
-
-1. Profile Information Management
-   - Users can view their current profile information
-   - Users can edit basic information: name, email, phone number, address
-   - Profile picture upload and management
-   - Bio/description field (optional, max 500 characters)
-
-2. Account Settings
-   - Change password functionality
-   - Email notification preferences
-   - Privacy settings (public/private profile)
-   - Account deactivation option
-
-3. Validation Rules
-   - Email must be unique and valid format
-   - Phone number must follow international format
-   - Name fields are required and must be at least 2 characters
-   - Password changes require current password verification
-
-4. Security Features
-   - All changes require password confirmation for sensitive data
-   - Email verification for email address changes
-   - Activity log for profile changes
-   - Data encryption for sensitive information
-
-5. User Experience
-   - Real-time validation feedback
-   - Auto-save for non-critical changes
-   - Confirmation dialogs for important changes
-   - Mobile-responsive design`,
-    versionedTestCases: {
-      1: [
-        {
-          id: "2-1-v1",
-          name: "Verify user can update profile information",
-          functionalModule: "User Management",
-          type: "Positive Case" as const,
-          preconditions: "User is logged in to the system",
-          steps: ["Navigate to profile page", "Update profile information", "Click save button"],
-          expectedResults: ["Success message is displayed", "Profile information is updated"],
-          priority: "Medium" as const,
-        },
-      ],
-      2: [
-        {
-          id: "2-1-v2",
-          name: "Verify user can update profile information",
-          functionalModule: "User Management",
-          type: "Positive Case" as const,
-          preconditions: "User is logged in to the system",
-          steps: ["Navigate to profile page", "Update profile information", "Click save button"],
-          expectedResults: ["Success message is displayed", "Profile information is updated"],
-          priority: "Medium" as const,
-        },
-        {
-          id: "2-2-v2",
-          name: "Verify user can change password",
-          functionalModule: "User Management",
-          type: "Positive Case" as const,
-          preconditions: "User is logged in to the system",
-          steps: ["Navigate to profile page", "Click change password", "Enter current and new password", "Click save"],
-          expectedResults: ["Success message is displayed", "User can login with new password"],
-          priority: "High" as const,
-        },
-        {
-          id: "2-3-v2",
-          name: "Verify validation for required fields",
-          functionalModule: "User Management",
-          type: "Negative Case" as const,
-          preconditions: "User is logged in to the system",
-          steps: ["Navigate to profile page", "Clear required fields", "Click save button"],
-          expectedResults: ["Validation errors are displayed", "Profile is not updated"],
-          priority: "Medium" as const,
-        },
-      ],
-    },
-    aiMessages: [
-      {
-        id: "2-ai-1",
-        content:
-          "I've analyzed the user profile requirements and generated test cases for profile management functionality. (Version 1)",
-        sender: "ai" as const,
-        timestamp: new Date(),
-        version: 1,
-      },
-      {
-        id: "2-ai-2",
-        content: "I've updated the test cases to include validation for all required fields as requested. (Version 2)",
-        sender: "ai" as const,
-        timestamp: new Date(),
-        version: 2,
-      },
-    ],
-  },
-]
+interface Task {
+  id: string
+  title: string
+  date: string
+  type: string
+  version: number
+  content: string
+  versionedTestCases: Record<number, TestCase[]>
+  aiMessages: Message[]
+}
 
 export default function CaseGenerationPage() {
-  const [selectedTaskId, setSelectedTaskId] = useState(mockTasks[0]?.id || null)
+  const [selectedTaskId, setSelectedTaskId] = useState<string>("1")
   const [selectedVersion, setSelectedVersion] = useState<number | null>(null)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [exportConfig, setExportConfig] = useState<ExportConfig>(defaultExportConfig)
+  const [exportConfig, setExportConfig] = useState(defaultExportConfig)
   const [showVersionDropdown, setShowVersionDropdown] = useState(false)
   const [showDraggableOriginal, setShowDraggableOriginal] = useState(false)
   const [dragPosition, setDragPosition] = useState({ x: 100, y: 100 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
 
+  // Mock data
+  const mockTasks: Task[] = [
+    {
+      id: "1",
+      title: "Login Feature Requirements",
+      date: "2025-03-20",
+      type: "PDF",
+      version: 1,
+      content:
+        'User Authentication System Requirements\n\n1. Login Functionality\n   - Users must be able to log in using email and password\n   - System should validate credentials against the database\n   - Invalid login attempts should display appropriate error messages\n   - After 3 failed attempts, account should be temporarily locked for 15 minutes\n\n2. Password Requirements\n   - Minimum 8 characters\n   - Must contain at least one uppercase letter, one lowercase letter, and one number\n   - Special characters are optional but recommended\n\n3. Session Management\n   - User sessions should expire after 30 minutes of inactivity\n   - Users should be able to log out manually\n   - System should remember login state for "Remember Me" option (up to 30 days)\n\n4. Security Features\n   - All passwords must be encrypted using bcrypt\n   - Login attempts should be logged for security monitoring\n   - Two-factor authentication should be supported (optional)\n\n5. User Interface\n   - Login form should be responsive and work on all devices\n   - Clear error messages for validation failures\n   - Loading indicators during authentication process',
+      versionedTestCases: {
+        1: [
+          {
+            id: "1-1",
+            name: "Verify user login with valid credentials",
+            functionalModule: "Authentication",
+            type: "Positive Case",
+            preconditions: "User has a valid account in the system",
+            steps: ["Navigate to the login page", "Enter valid username and password", "Click on the login button"],
+            expectedResults: [
+              "User should be redirected to the dashboard",
+              "User name should be displayed in the header",
+            ],
+            priority: "High",
+          },
+          {
+            id: "1-2",
+            name: "Verify user login with invalid credentials",
+            functionalModule: "Authentication",
+            type: "Negative Case",
+            preconditions: "User has an account in the system",
+            steps: ["Navigate to the login page", "Enter invalid username and password", "Click on the login button"],
+            expectedResults: ["Error message should be displayed", "User should remain on the login page"],
+            priority: "High",
+          },
+          {
+            id: "1-3",
+            name: "Verify account lockout after failed attempts",
+            functionalModule: "Authentication",
+            type: "Corner Case",
+            preconditions: "User has an account in the system",
+            steps: ["Navigate to the login page", "Enter invalid credentials 3 times", "Try to login again"],
+            expectedResults: ["Account should be locked", "Lockout message should be displayed"],
+            priority: "Medium",
+          },
+        ],
+      },
+      aiMessages: [
+        {
+          id: "1-ai-1",
+          content:
+            "I've analyzed the login feature requirements and generated test cases focusing on authentication flows. (Version 1)",
+          sender: "ai",
+          timestamp: new Date(),
+          version: 1,
+        },
+      ],
+    },
+  ]
+
   // Find the selected task or default to the first one
-  const selectedTask = selectedTaskId ? mockTasks.find((task) => task.id === selectedTaskId) : mockTasks[0]
+  const selectedTask = mockTasks.find((task) => task.id === selectedTaskId) || mockTasks[0]
 
   // Get the version to display (selected version or latest)
   const versionToDisplay = selectedVersion || selectedTask?.version || 1
@@ -244,13 +144,9 @@ export default function CaseGenerationPage() {
     console.log(`Switching to version ${version} for task ${selectedTaskId}`)
   }
 
-  const handleExportConfigChange = (newConfig: ExportConfig) => {
+  const handleExportConfigChange = (newConfig: any) => {
     setExportConfig(newConfig)
     console.log("Export configuration updated:", newConfig)
-  }
-
-  const handleExportRequest = () => {
-    console.log("Export customization requested")
   }
 
   const handleMouseDown = (e: React.MouseEvent) => {
@@ -291,7 +187,7 @@ export default function CaseGenerationPage() {
 
   return (
     <WorkspaceLayout>
-      {/* Generated Test Cases Module - Expanded width (no Requirements module) */}
+      {/* Generated Test Cases Module */}
       <div className="col-span-12 md:col-span-8 flex flex-col h-full overflow-auto p-3">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full flex flex-col">
           <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg flex items-center justify-between">
