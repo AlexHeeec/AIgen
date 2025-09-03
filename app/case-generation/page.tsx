@@ -1,14 +1,12 @@
 "use client"
 
-import type React from "react"
 import { useState, useEffect } from "react"
 import WorkspaceLayout from "@/components/workspace-layout"
 import TestCasePreview from "@/components/test-case-preview"
 import AIChatInterface from "@/components/ai-chat-interface"
-import { type ExportConfig, defaultExportConfig } from "@/utils/excel-export"
+import { defaultExportConfig } from "@/utils/excel-export"
 import { FaHistory, FaChevronDown, FaFileAlt, FaTimes } from "react-icons/fa"
 
-// Mock data structure with version-specific test cases
 const mockTasks = [
   {
     id: "1",
@@ -16,33 +14,8 @@ const mockTasks = [
     date: "2025-03-20",
     type: "PDF",
     version: 1,
-    content: `User Authentication System Requirements
-
-1. Login Functionality
-   - Users must be able to log in using email and password
-   - System should validate credentials against the database
-   - Invalid login attempts should display appropriate error messages
-   - After 3 failed attempts, account should be temporarily locked for 15 minutes
-
-2. Password Requirements
-   - Minimum 8 characters
-   - Must contain at least one uppercase letter, one lowercase letter, and one number
-   - Special characters are optional but recommended
-
-3. Session Management
-   - User sessions should expire after 30 minutes of inactivity
-   - Users should be able to log out manually
-   - System should remember login state for "Remember Me" option (up to 30 days)
-
-4. Security Features
-   - All passwords must be encrypted using bcrypt
-   - Login attempts should be logged for security monitoring
-   - Two-factor authentication should be supported (optional)
-
-5. User Interface
-   - Login form should be responsive and work on all devices
-   - Clear error messages for validation failures
-   - Loading indicators during authentication process`,
+    content:
+      "User Authentication System Requirements\n\n1. Login Functionality\n   - Users must be able to log in using email and password\n   - System should validate credentials against the database\n   - Invalid login attempts should display appropriate error messages\n   - After 3 failed attempts, account should be temporarily locked for 15 minutes\n\n2. Password Requirements\n   - Minimum 8 characters\n   - Must contain at least one uppercase letter, one lowercase letter, and one number\n   - Special characters are optional but recommended\n\n3. Session Management\n   - User sessions should expire after 30 minutes of inactivity\n   - Users should be able to log out manually\n   - System should remember login state for Remember Me option (up to 30 days)\n\n4. Security Features\n   - All passwords must be encrypted using bcrypt\n   - Login attempts should be logged for security monitoring\n   - Two-factor authentication should be supported (optional)\n\n5. User Interface\n   - Login form should be responsive and work on all devices\n   - Clear error messages for validation failures\n   - Loading indicators during authentication process",
     versionedTestCases: {
       1: [
         {
@@ -85,32 +58,23 @@ const mockTasks = [
 
 export default function CaseGenerationPage() {
   const [selectedTaskId, setSelectedTaskId] = useState(mockTasks[0]?.id || null)
-  const [selectedVersion, setSelectedVersion] = useState<number | null>(null)
+  const [selectedVersion, setSelectedVersion] = useState(null)
   const [isGenerating, setIsGenerating] = useState(false)
-  const [exportConfig, setExportConfig] = useState<ExportConfig>(defaultExportConfig)
+  const [exportConfig, setExportConfig] = useState(defaultExportConfig)
   const [showVersionDropdown, setShowVersionDropdown] = useState(false)
   const [showDraggableOriginal, setShowDraggableOriginal] = useState(false)
   const [dragPosition, setDragPosition] = useState({ x: 100, y: 100 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
 
-  // Find the selected task or default to the first one
   const selectedTask = selectedTaskId ? mockTasks.find((task) => task.id === selectedTaskId) : mockTasks[0]
-
-  // Get the version to display (selected version or latest)
   const versionToDisplay = selectedVersion || selectedTask?.version || 1
-
-  // Get available versions for the selected task
   const availableVersions = selectedTask ? Array.from({ length: selectedTask.version }, (_, i) => i + 1) : [1]
-
-  // Get test cases for the current version
   const currentVersionTestCases = selectedTask?.versionedTestCases[versionToDisplay] || []
 
-  // Handle click outside for popups
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      const target = event.target as HTMLElement
-
+    const handleClickOutside = (event) => {
+      const target = event.target
       if (showVersionDropdown && !target.closest(".version-dropdown")) {
         setShowVersionDropdown(false)
       }
@@ -122,13 +86,13 @@ export default function CaseGenerationPage() {
     }
   }, [showVersionDropdown])
 
-  const handleVersionSelect = (version: number) => {
+  const handleVersionSelect = (version) => {
     setSelectedVersion(version)
     setShowVersionDropdown(false)
-    console.log(`Switching to version ${version} for task ${selectedTaskId}`)
+    console.log("Switching to version", version, "for task", selectedTaskId)
   }
 
-  const handleExportConfigChange = (newConfig: ExportConfig) => {
+  const handleExportConfigChange = (newConfig) => {
     setExportConfig(newConfig)
     console.log("Export configuration updated:", newConfig)
   }
@@ -137,9 +101,9 @@ export default function CaseGenerationPage() {
     console.log("Export customization requested")
   }
 
-  const handleMouseDown = (e: React.MouseEvent) => {
+  const handleMouseDown = (e) => {
     setIsDragging(true)
-    const rect = (e.target as HTMLElement).closest(".draggable-dialog")?.getBoundingClientRect()
+    const rect = e.target.closest(".draggable-dialog")?.getBoundingClientRect()
     if (rect) {
       setDragOffset({
         x: e.clientX - rect.left,
@@ -148,7 +112,7 @@ export default function CaseGenerationPage() {
     }
   }
 
-  const handleMouseMove = (e: MouseEvent) => {
+  const handleMouseMove = (e) => {
     if (isDragging) {
       setDragPosition({
         x: e.clientX - dragOffset.x,
@@ -161,7 +125,6 @@ export default function CaseGenerationPage() {
     setIsDragging(false)
   }
 
-  // Add event listeners for dragging
   useEffect(() => {
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove)
@@ -175,7 +138,6 @@ export default function CaseGenerationPage() {
 
   return (
     <WorkspaceLayout>
-      {/* Generated Test Cases Module - Full Width */}
       <div className="col-span-12 md:col-span-8 flex flex-col h-full overflow-auto p-3">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full flex flex-col">
           <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg flex items-center justify-between">
@@ -245,7 +207,6 @@ export default function CaseGenerationPage() {
         </div>
       </div>
 
-      {/* AI Assistant Module */}
       <div className="col-span-12 md:col-span-4 flex flex-col h-full overflow-auto p-3">
         <div className="bg-white rounded-lg shadow-sm border border-gray-200 h-full flex flex-col">
           <div className="p-3 border-b border-gray-200 bg-gray-50 rounded-t-lg">
@@ -269,18 +230,16 @@ export default function CaseGenerationPage() {
         </div>
       </div>
 
-      {/* Draggable Original Content Dialog */}
       {showDraggableOriginal && (
         <div className="fixed inset-0 z-50 pointer-events-none">
           <div
             className="draggable-dialog absolute bg-white rounded-lg shadow-2xl border border-gray-300 w-[600px] max-h-[80vh] overflow-hidden pointer-events-auto"
             style={{
-              left: `${dragPosition.x}px`,
-              top: `${dragPosition.y}px`,
+              left: dragPosition.x + "px",
+              top: dragPosition.y + "px",
               cursor: isDragging ? "grabbing" : "default",
             }}
           >
-            {/* Draggable Header */}
             <div
               className="bg-gray-100 px-4 py-3 border-b border-gray-200 cursor-grab active:cursor-grabbing select-none"
               onMouseDown={handleMouseDown}
@@ -301,10 +260,8 @@ export default function CaseGenerationPage() {
               </div>
             </div>
 
-            {/* Content */}
             <div className="p-4 overflow-y-auto max-h-[calc(80vh-60px)]">
               <div className="space-y-4">
-                {/* Task Title */}
                 <div className="border-b border-gray-200 pb-3">
                   <h4 className="font-semibold text-gray-900 mb-1">{selectedTask?.title}</h4>
                   <div className="text-sm text-gray-500">
@@ -312,7 +269,6 @@ export default function CaseGenerationPage() {
                   </div>
                 </div>
 
-                {/* Original Content */}
                 <div>
                   <div className="bg-gray-50 rounded-lg p-4 border border-gray-200">
                     <div className="text-sm text-gray-800 whitespace-pre-wrap leading-relaxed">
@@ -323,7 +279,6 @@ export default function CaseGenerationPage() {
               </div>
             </div>
 
-            {/* Footer */}
             <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
               <div className="text-xs text-gray-500 text-center">
                 This is the original content used to generate test cases • Drag the header to move
