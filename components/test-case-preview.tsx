@@ -2,33 +2,20 @@
 
 import type React from "react"
 
+import type { ReactElement } from "react"
 import { useState, useMemo, useEffect } from "react"
-import {
-  FaSearch,
-  FaEdit,
-  FaTrash,
-  FaFileExcel,
-  FaClipboardList,
-  FaRocket,
-  FaPlus,
-  FaCheck,
-  FaTimes,
-  FaFileAlt,
-} from "react-icons/fa"
-import { Button } from "@/components/ui/button"
-import { Input, TextArea } from "@/components/ui/input"
-import { exportTestCasesToExcel, type ExportConfig, defaultExportConfig } from "@/utils/excel-export"
-import { getFileIcon } from "@/utils/file-icon"
+import { FaEdit, FaPlus, FaTimes, FaDownload, FaSave } from "react-icons/fa"
+import { type ExportConfig, defaultExportConfig } from "@/utils/excel-export"
 
 interface TestCase {
   id: string
   name: string
   functionalModule: string
-  type: "Positive Case" | "Negative Case" | "Corner Case"
+  type: string
   preconditions: string
   steps: string[]
   expectedResults: string[]
-  priority: "High" | "Medium" | "Low"
+  priority: string
 }
 
 interface TestCasePreviewProps {
@@ -37,8 +24,8 @@ interface TestCasePreviewProps {
   availableVersions: number[]
   onVersionSelect: (version: number) => void
   taskTitle: string
-  exportConfig?: ExportConfig
-  selectedTask?: any
+  exportConfig: ExportConfig
+  selectedTask: any
 }
 
 interface InlineEditState {
@@ -51,11 +38,11 @@ interface InlineEditState {
 interface NewTestCase {
   name: string
   functionalModule: string
-  type: "Positive Case" | "Negative Case" | "Corner Case"
+  type: string
   preconditions: string
   steps: string[]
   expectedResults: string[]
-  priority: "High" | "Medium" | "Low"
+  priority: string
 }
 
 export default function TestCasePreview({
@@ -66,7 +53,7 @@ export default function TestCasePreview({
   taskTitle,
   exportConfig = defaultExportConfig,
   selectedTask,
-}: TestCasePreviewProps) {
+}: TestCasePreviewProps): ReactElement {
   const [searchText, setSearchText] = useState("")
   const [priorityFilter, setPriorityFilter] = useState<string | null>(null)
   const [typeFilter, setTypeFilter] = useState<string | null>(null)
@@ -76,7 +63,7 @@ export default function TestCasePreview({
   const [inlineEdit, setInlineEdit] = useState<InlineEditState | null>(null)
   const [showSuccessToast, setShowSuccessToast] = useState(false)
   const [showAddDialog, setShowAddDialog] = useState(false)
-  const [newTestCase, setNewTestCase] = useState<NewTestCase>({
+  const [newTestCase, setNewTestCase] = useState({
     name: "",
     functionalModule: "",
     type: "Positive Case",
@@ -91,16 +78,26 @@ export default function TestCasePreview({
   const [dragPosition, setDragPosition] = useState({ x: 100, y: 100 })
   const [isDragging, setIsDragging] = useState(false)
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 })
+  const [searchTerm, setSearchTerm] = useState("")
+  const [editingCell, setEditingCell] = useState<{ id: string; field: string } | null>(null)
+  const [editValue, setEditValue] = useState("")
+  const [localTestCases, setLocalTestCases] = useState(testCases)
+  const [showAddForm, setShowAddForm] = useState(false)
+
+  // Update local test cases when props change
+  useEffect(() => {
+    setLocalTestCases(testCases)
+  }, [testCases])
 
   // Filter test cases based on search text, priority filter, and type filter
   const filteredTestCases = useMemo(() => {
-    return testCases.filter((testCase) => {
-      const matchesSearch = testCase.name.toLowerCase().includes(searchText.toLowerCase())
-      const matchesPriority = priorityFilter ? testCase.priority === priorityFilter : true
-      const matchesType = typeFilter ? testCase.type === typeFilter : true
-      return matchesSearch && matchesPriority && matchesType
-    })
-  }, [testCases, searchText, priorityFilter, typeFilter])
+    return localTestCases.filter(
+      (testCase) =>
+        testCase.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        testCase.functionalModule.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        testCase.type.toLowerCase().includes(searchTerm.toLowerCase()),
+    )
+  }, [localTestCases, searchTerm])
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
@@ -150,84 +147,55 @@ export default function TestCasePreview({
   }
 
   const handleExport = () => {
-    setExporting(true)
-
-    // Use setTimeout to prevent UI freezing
-    setTimeout(() => {
-      try {
-        exportTestCasesToExcel(testCases, taskTitle, exportConfig)
-      } catch (error) {
-        console.error("Export error:", error)
-      } finally {
-        setExporting(false)
-      }
-    }, 100)
+    console.log("Exporting test cases with config:", exportConfig)
+    // In a real app, this would trigger the actual export
   }
 
-  const handleInlineEdit = (testCaseId: string, field: string, currentValue: string) => {
-    setInlineEdit({
-      testCaseId,
-      field,
-      value: currentValue,
-      originalValue: currentValue,
-    })
+  const handleInlineEdit = (id: string, field: string, currentValue: any) => {
+    setEditingCell({ id, field })
+    if (Array.isArray(currentValue)) {
+      setEditValue(currentValue.join("\n"))
+    } else {
+      setEditValue(currentValue)
+    }
   }
 
   const handleInlineEditSave = () => {
-    if (!inlineEdit) return
+    if (!editingCell) return
 
-    // Check if value is empty
-    if (!inlineEdit.value.trim()) {
-      // Keep the edit state but don't save
-      return
-    }
-
-    // Handle array fields (steps and expectedResults)
-    if (inlineEdit.field === "steps" || inlineEdit.field === "expectedResults") {
-      const arrayValue = inlineEdit.value.split("\n").filter((item) => item.trim())
-      console.log("Updating field:", inlineEdit.field, "for test case:", inlineEdit.testCaseId, "to:", arrayValue)
-    } else {
-      console.log("Updating field:", inlineEdit.field, "for test case:", inlineEdit.testCaseId, "to:", inlineEdit.value)
-    }
-
-    setInlineEdit(null)
-    showSuccessMessage()
+    setLocalTestCases((prev) =>
+      prev.map((tc) => {
+        if (tc.id === editingCell.id) {
+          const updatedTC = { ...tc }
+          if (editingCell.field === "steps" || editingCell.field === "expectedResults") {
+            updatedTC[editingCell.field] = editValue.split("\n").filter((item) => item.trim())
+          } else {
+            updatedTC[editingCell.field] = editValue
+          }
+          return updatedTC
+        }
+        return tc
+      }),
+    )
+    setEditingCell(null)
+    setEditValue("")
   }
 
   const handleInlineEditCancel = () => {
-    setInlineEdit(null)
-  }
-
-  const showSuccessMessage = () => {
-    setShowSuccessToast(true)
-    setTimeout(() => setShowSuccessToast(false), 2000)
+    setEditingCell(null)
+    setEditValue("")
   }
 
   const handleAddTestCase = () => {
-    // Validate required fields
-    if (!newTestCase.name.trim() || !newTestCase.functionalModule.trim()) {
-      return
-    }
-
-    // Filter out empty steps and expected results
-    const filteredSteps = newTestCase.steps.filter((step) => step.trim())
-    const filteredResults = newTestCase.expectedResults.filter((result) => result.trim())
-
-    if (filteredSteps.length === 0 || filteredResults.length === 0) {
-      return
-    }
-
-    // In a real app, you would call your API to add the test case
-    const testCaseToAdd = {
+    const id = `tc-${Date.now()}`
+    const testCase = {
       ...newTestCase,
-      id: `tc-${Date.now()}`,
-      steps: filteredSteps,
-      expectedResults: filteredResults,
+      id,
+      steps: newTestCase.steps.filter((step) => step.trim()),
+      expectedResults: newTestCase.expectedResults.filter((result) => result.trim()),
     }
 
-    console.log("Adding new test case:", testCaseToAdd)
-
-    // Reset form
+    setLocalTestCases((prev) => [...prev, testCase])
     setNewTestCase({
       name: "",
       functionalModule: "",
@@ -237,9 +205,12 @@ export default function TestCasePreview({
       expectedResults: [""],
       priority: "Medium",
     })
+    setShowAddForm(false)
+  }
 
-    setShowAddDialog(false)
-    showSuccessMessage()
+  const showSuccessMessage = () => {
+    setShowSuccessToast(true)
+    setTimeout(() => setShowSuccessToast(false), 2000)
   }
 
   // Format list items with numbers for display
@@ -424,19 +395,15 @@ export default function TestCasePreview({
   }, [isDragging, dragOffset])
 
   // Empty state when no test cases
-  if (testCases.length === 0) {
+  if (localTestCases.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full py-16 px-4">
-        <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mb-6">
-          <FaClipboardList className="text-blue-500" size={32} />
-        </div>
-        <h3 className="text-xl font-semibold text-gray-900 mb-3">No Test Cases Generated</h3>
-        <p className="text-gray-500 text-center mb-6 max-w-md">
-          Upload your requirements documents or enter text to generate comprehensive test cases automatically.
-        </p>
-        <div className="flex items-center text-sm text-gray-400 bg-gray-50 px-4 py-2 rounded-lg">
-          <FaRocket className="mr-2" size={14} />
-          <span>Ready to generate test cases from your requirements</span>
+      <div className="flex flex-col items-center justify-center h-full py-12">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+            <FaEdit className="text-gray-400" size={24} />
+          </div>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">No Test Cases Yet</h3>
+          <p className="text-gray-600 mb-4">Upload requirements to generate test cases automatically</p>
         </div>
       </div>
     )
@@ -444,682 +411,394 @@ export default function TestCasePreview({
 
   return (
     <div className="space-y-4">
-      {/* Test Cases Count - Single Row */}
-      <div className="mb-3">
-        <div className="text-sm font-medium text-gray-600">
-          Total Test Cases: <span className="font-bold text-gray-900">{filteredTestCases.length}</span>
+      {/* Header with count and search */}
+      <div className="flex items-center justify-between">
+        <div className="text-sm text-gray-600">
+          {filteredTestCases.length} test case{filteredTestCases.length !== 1 ? "s" : ""} found
         </div>
-      </div>
-      {/* Search and Filter Controls with Add Button */}
-      <div className="flex flex-wrap items-center gap-2 mb-4">
-        {/* Search */}
-        <div className="relative flex-grow max-w-xs">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <FaSearch className="text-gray-400" size={14} />
-          </div>
+        <div className="flex items-center space-x-3">
           <input
             type="text"
-            placeholder="Search test cases"
-            value={searchText}
-            onChange={(e) => setSearchText(e.target.value)}
-            className="pl-10 pr-4 py-2 w-full border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            placeholder="Search test cases..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            className="px-3 py-1 border border-gray-300 rounded text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
+          <button
+            onClick={() => setShowAddForm(true)}
+            className="flex items-center px-3 py-1 bg-green-600 text-white rounded text-sm hover:bg-green-700 transition-colors"
+          >
+            <FaPlus className="mr-1" size={12} />
+            Add
+          </button>
+          <button
+            onClick={handleExport}
+            className="flex items-center px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors"
+          >
+            <FaDownload className="mr-1" size={12} />
+            Export
+          </button>
         </div>
-
-        {/* Type Filter */}
-        <select
-          value={typeFilter || ""}
-          onChange={(e) => setTypeFilter(e.target.value || null)}
-          className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="">All Types</option>
-          <option value="Positive Case">Positive Case</option>
-          <option value="Negative Case">Negative Case</option>
-          <option value="Corner Case">Corner Case</option>
-        </select>
-
-        {/* Priority Filter */}
-        <select
-          value={priorityFilter || ""}
-          onChange={(e) => setPriorityFilter(e.target.value || null)}
-          className="px-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-        >
-          <option value="">All Priorities</option>
-          <option value="High">High</option>
-          <option value="Medium">Medium</option>
-          <option value="Low">Low</option>
-        </select>
-
-        {/* Spacer to push buttons to the right */}
-        <div className="flex-grow"></div>
-
-        {/* Export Button */}
-        <button
-          onClick={handleExport}
-          disabled={exporting}
-          className="flex items-center text-gray-700 bg-white hover:bg-gray-50 px-3 py-2 rounded border border-gray-300 hover:border-blue-300 text-sm"
-        >
-          {exporting ? (
-            <>
-              <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full mr-2"></div>
-              <span>Exporting...</span>
-            </>
-          ) : (
-            <>
-              <FaFileExcel className="mr-2 text-green-600" size={14} />
-              <span>Export</span>
-            </>
-          )}
-        </button>
-
-        {/* Add Button */}
-        <button
-          onClick={() => setShowAddDialog(true)}
-          className="flex items-center bg-blue-500 text-white px-3 py-2 rounded-md hover:bg-blue-600 transition-colors text-sm"
-        >
-          <FaPlus className="mr-2" size={12} />
-          Add
-        </button>
       </div>
 
-      {/* Test Cases Table with Horizontal Scroll */}
-      <div className="border border-gray-200 rounded-md overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="min-w-[1400px] w-full">
-            {/* Table Header */}
-            <thead className="bg-gray-100 border-b border-gray-200">
-              <tr>
-                <th className="w-16 px-4 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-center">
-                  No
-                </th>
-                <th className="w-48 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-left">
-                  Test Case Name
-                </th>
-                <th className="w-40 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-left">
-                  Functional Module
-                </th>
-                <th className="w-32 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-center">
-                  Type
-                </th>
-                <th className="w-24 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-center">
-                  Priority
-                </th>
-                <th className="w-56 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-left">
-                  Preconditions
-                </th>
-                <th className="w-80 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-left">
-                  Test Steps
-                </th>
-                <th className="w-80 px-6 py-4 font-medium text-sm text-gray-700 border-r border-gray-200 text-left">
-                  Expected Results
-                </th>
-                <th className="w-24 px-6 py-4 font-medium text-sm text-gray-700 text-center">Actions</th>
-              </tr>
-            </thead>
-
-            {/* Table Body */}
-            <tbody className="divide-y divide-gray-200">
-              {filteredTestCases.length === 0 ? (
-                <tr>
-                  <td colSpan={9} className="py-16 px-4">
-                    <div className="flex flex-col items-center justify-center">
-                      <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-                        <FaSearch className="text-gray-400" size={20} />
-                      </div>
-                      <h3 className="text-lg font-medium text-gray-900 mb-2">No Matching Test Cases</h3>
-                      <p className="text-sm text-gray-500 text-center">
-                        Try adjusting your search terms or filters to find test cases.
-                      </p>
+      {/* Test Cases Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full border border-gray-200 rounded-lg">
+          <thead className="bg-gray-50">
+            <tr>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 w-8">
+                NO
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 w-16">
+                Priority
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 w-20">
+                Type
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200 w-32">
+                Functional Module
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                Test Case Name
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                Preconditions
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                Test Steps
+              </th>
+              <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                Expected Results
+              </th>
+            </tr>
+          </thead>
+          <tbody className="bg-white divide-y divide-gray-200">
+            {filteredTestCases.map((testCase, index) => (
+              <tr key={testCase.id} className="hover:bg-gray-50">
+                <td className="px-3 py-2 text-sm text-gray-900 border-r border-gray-200">{index + 1}</td>
+                <td className="px-3 py-2 text-sm border-r border-gray-200">
+                  {editingCell?.id === testCase.id && editingCell?.field === "priority" ? (
+                    <div className="flex items-center space-x-1">
+                      <select
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="High">High</option>
+                        <option value="Medium">Medium</option>
+                        <option value="Low">Low</option>
+                      </select>
+                      <button onClick={handleInlineEditSave} className="text-green-600 hover:text-green-700">
+                        <FaSave size={10} />
+                      </button>
+                      <button onClick={handleInlineEditCancel} className="text-red-600 hover:text-red-700">
+                        <FaTimes size={10} />
+                      </button>
                     </div>
-                  </td>
-                </tr>
-              ) : (
-                filteredTestCases.map((testCase, index) => (
-                  <tr
-                    key={testCase.id}
-                    className={`${index % 2 === 0 ? "bg-white" : "bg-gray-50"} hover:bg-blue-50 transition-colors`}
-                  >
-                    {/* No */}
-                    <td className="w-16 px-4 py-5 border-r border-gray-200 text-center">
-                      <div className="text-sm font-medium text-gray-900">{index + 1}</div>
-                    </td>
-
-                    {/* Test Case Name */}
-                    <td className="w-48 px-6 py-5 border-r border-gray-200">
-                      {renderEditableCell(
-                        testCase,
-                        "name",
-                        testCase.name,
-                        "font-medium text-gray-900 break-words leading-relaxed",
-                      )}
-                    </td>
-
-                    {/* Functional Module */}
-                    <td className="w-40 px-6 py-5 border-r border-gray-200">
-                      {renderEditableCell(
-                        testCase,
-                        "functionalModule",
-                        testCase.functionalModule,
-                        "text-gray-600 break-words leading-relaxed text-sm",
-                      )}
-                    </td>
-
-                    {/* Type */}
-                    <td className="w-32 px-6 py-5 border-r border-gray-200">
-                      {renderEditableSelectCell(
-                        testCase,
-                        "type",
-                        testCase.type,
-                        ["Positive Case", "Negative Case", "Corner Case"],
-                        getTypeColor(testCase.type),
-                      )}
-                    </td>
-
-                    {/* Priority */}
-                    <td className="w-24 px-6 py-5 border-r border-gray-200">
-                      {renderEditableSelectCell(
-                        testCase,
-                        "priority",
-                        testCase.priority,
-                        ["High", "Medium", "Low"],
-                        getPriorityColor(testCase.priority),
-                      )}
-                    </td>
-
-                    {/* Preconditions */}
-                    <td className="w-56 px-6 py-5 border-r border-gray-200">
-                      {renderEditableCell(
-                        testCase,
-                        "preconditions",
-                        testCase.preconditions || "None",
-                        "text-gray-600 break-words whitespace-pre-line leading-relaxed text-sm",
-                      )}
-                    </td>
-
-                    {/* Test Steps */}
-                    <td className="w-80 px-6 py-5 border-r border-gray-200">
-                      {renderEditableTextareaCell(
-                        testCase,
-                        "steps",
-                        testCase.steps,
-                        "text-gray-600 break-words whitespace-pre-line leading-relaxed text-sm",
-                      )}
-                    </td>
-
-                    {/* Expected Results */}
-                    <td className="w-80 px-6 py-5 border-r border-gray-200">
-                      {renderEditableTextareaCell(
-                        testCase,
-                        "expectedResults",
-                        testCase.expectedResults,
-                        "text-gray-600 break-words whitespace-pre-line leading-relaxed text-sm",
-                      )}
-                    </td>
-
-                    {/* Actions */}
-                    <td className="w-24 px-6 py-5">
-                      <div className="flex items-center justify-center space-x-3">
-                        <button
-                          onClick={() => handleEditTestCase(testCase)}
-                          className="text-blue-500 hover:text-blue-700 p-2 rounded hover:bg-blue-100 transition-colors"
-                          title="Edit"
-                        >
-                          <FaEdit size={14} />
+                  ) : (
+                    <span
+                      className={`inline-block px-2 py-1 text-xs rounded cursor-pointer ${
+                        testCase.priority === "High"
+                          ? "bg-red-100 text-red-800"
+                          : testCase.priority === "Medium"
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-green-100 text-green-800"
+                      }`}
+                      onClick={() => handleInlineEdit(testCase.id, "priority", testCase.priority)}
+                    >
+                      {testCase.priority}
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-sm border-r border-gray-200">
+                  {editingCell?.id === testCase.id && editingCell?.field === "type" ? (
+                    <div className="flex items-center space-x-1">
+                      <select
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      >
+                        <option value="Positive Case">Positive Case</option>
+                        <option value="Negative Case">Negative Case</option>
+                        <option value="Corner Case">Corner Case</option>
+                      </select>
+                      <button onClick={handleInlineEditSave} className="text-green-600 hover:text-green-700">
+                        <FaSave size={10} />
+                      </button>
+                      <button onClick={handleInlineEditCancel} className="text-red-600 hover:text-red-700">
+                        <FaTimes size={10} />
+                      </button>
+                    </div>
+                  ) : (
+                    <span
+                      className="text-gray-900 cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded"
+                      onClick={() => handleInlineEdit(testCase.id, "type", testCase.type)}
+                    >
+                      {testCase.type}
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-sm text-gray-900 border-r border-gray-200">
+                  {editingCell?.id === testCase.id && editingCell?.field === "functionalModule" ? (
+                    <div className="flex items-center space-x-1">
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500 w-full"
+                      />
+                      <button onClick={handleInlineEditSave} className="text-green-600 hover:text-green-700">
+                        <FaSave size={10} />
+                      </button>
+                      <button onClick={handleInlineEditCancel} className="text-red-600 hover:text-red-700">
+                        <FaTimes size={10} />
+                      </button>
+                    </div>
+                  ) : (
+                    <span
+                      className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded"
+                      onClick={() => handleInlineEdit(testCase.id, "functionalModule", testCase.functionalModule)}
+                    >
+                      {testCase.functionalModule}
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-sm text-gray-900 border-r border-gray-200">
+                  {editingCell?.id === testCase.id && editingCell?.field === "name" ? (
+                    <div className="flex items-center space-x-1">
+                      <input
+                        type="text"
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500 w-full"
+                      />
+                      <button onClick={handleInlineEditSave} className="text-green-600 hover:text-green-700">
+                        <FaSave size={10} />
+                      </button>
+                      <button onClick={handleInlineEditCancel} className="text-red-600 hover:text-red-700">
+                        <FaTimes size={10} />
+                      </button>
+                    </div>
+                  ) : (
+                    <span
+                      className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded"
+                      onClick={() => handleInlineEdit(testCase.id, "name", testCase.name)}
+                    >
+                      {testCase.name}
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-sm text-gray-900 border-r border-gray-200">
+                  {editingCell?.id === testCase.id && editingCell?.field === "preconditions" ? (
+                    <div className="flex items-center space-x-1">
+                      <textarea
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500 w-full resize-none"
+                        rows={2}
+                      />
+                      <div className="flex flex-col space-y-1">
+                        <button onClick={handleInlineEditSave} className="text-green-600 hover:text-green-700">
+                          <FaSave size={10} />
                         </button>
-                        <button
-                          onClick={() => setDeleteConfirmation(testCase.id)}
-                          className="text-gray-500 hover:text-red-600 p-2 rounded hover:bg-red-100 transition-colors"
-                          title="Delete"
-                        >
-                          <FaTrash size={14} />
+                        <button onClick={handleInlineEditCancel} className="text-red-600 hover:text-red-700">
+                          <FaTimes size={10} />
                         </button>
                       </div>
-                    </td>
-                  </tr>
-                ))
-              )}
-            </tbody>
-          </table>
-        </div>
-
-        {/* Scroll Indicator */}
-        <div className="bg-gray-50 px-4 py-2 text-xs text-gray-500 text-center border-t border-gray-200">
-          ← Scroll horizontally to view all columns →
-        </div>
+                    </div>
+                  ) : (
+                    <span
+                      className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded block"
+                      onClick={() => handleInlineEdit(testCase.id, "preconditions", testCase.preconditions)}
+                    >
+                      {testCase.preconditions}
+                    </span>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-sm text-gray-900 border-r border-gray-200">
+                  {editingCell?.id === testCase.id && editingCell?.field === "steps" ? (
+                    <div className="flex items-start space-x-1">
+                      <textarea
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500 w-full resize-none"
+                        rows={3}
+                        placeholder="Enter each step on a new line"
+                      />
+                      <div className="flex flex-col space-y-1">
+                        <button onClick={handleInlineEditSave} className="text-green-600 hover:text-green-700">
+                          <FaSave size={10} />
+                        </button>
+                        <button onClick={handleInlineEditCancel} className="text-red-600 hover:text-red-700">
+                          <FaTimes size={10} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded"
+                      onClick={() => handleInlineEdit(testCase.id, "steps", testCase.steps)}
+                    >
+                      <ol className="list-decimal list-inside space-y-1">
+                        {testCase.steps.map((step, stepIndex) => (
+                          <li key={stepIndex} className="text-xs">
+                            {step}
+                          </li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                </td>
+                <td className="px-3 py-2 text-sm text-gray-900">
+                  {editingCell?.id === testCase.id && editingCell?.field === "expectedResults" ? (
+                    <div className="flex items-start space-x-1">
+                      <textarea
+                        value={editValue}
+                        onChange={(e) => setEditValue(e.target.value)}
+                        className="text-xs border border-gray-300 rounded px-1 py-0.5 focus:outline-none focus:ring-1 focus:ring-blue-500 w-full resize-none"
+                        rows={3}
+                        placeholder="Enter each expected result on a new line"
+                      />
+                      <div className="flex flex-col space-y-1">
+                        <button onClick={handleInlineEditSave} className="text-green-600 hover:text-green-700">
+                          <FaSave size={10} />
+                        </button>
+                        <button onClick={handleInlineEditCancel} className="text-red-600 hover:text-red-700">
+                          <FaTimes size={10} />
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div
+                      className="cursor-pointer hover:bg-gray-100 px-1 py-0.5 rounded"
+                      onClick={() => handleInlineEdit(testCase.id, "expectedResults", testCase.expectedResults)}
+                    >
+                      <ul className="list-disc list-inside space-y-1">
+                        {testCase.expectedResults.map((result, resultIndex) => (
+                          <li key={resultIndex} className="text-xs">
+                            {result}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
 
-      {/* Success Toast */}
-      {showSuccessToast && (
-        <div className="fixed top-4 right-4 bg-green-500 text-white px-4 py-2 rounded-md shadow-lg z-50 flex items-center">
-          <FaCheck className="mr-2" size={14} />
-          Successful
-        </div>
-      )}
-
-      {/* Add Test Case Dialog */}
-      {showAddDialog && (
+      {/* Add Test Case Form */}
+      {showAddForm && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <h3 className="text-lg font-medium mb-4">Add New Test Case</h3>
+          <div className="bg-white rounded-lg p-6 max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Add New Test Case</h3>
+              <button onClick={() => setShowAddForm(false)} className="text-gray-400 hover:text-gray-600">
+                <FaTimes size={20} />
+              </button>
+            </div>
 
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Test Case Name *</label>
-                  <Input
-                    value={newTestCase.name}
-                    onChange={(e) => setNewTestCase({ ...newTestCase, name: e.target.value })}
-                    placeholder="Enter test case name"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Functional Module *</label>
-                  <Input
-                    value={newTestCase.functionalModule}
-                    onChange={(e) => setNewTestCase({ ...newTestCase, functionalModule: e.target.value })}
-                    placeholder="Enter functional module"
-                  />
-                </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Test Case Name</label>
+                <input
+                  type="text"
+                  value={newTestCase.name}
+                  onChange={(e) => setNewTestCase((prev) => ({ ...prev, name: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter test case name"
+                />
               </div>
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">Functional Module</label>
+                  <input
+                    type="text"
+                    value={newTestCase.functionalModule}
+                    onChange={(e) => setNewTestCase((prev) => ({ ...prev, functionalModule: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="e.g., Authentication"
+                  />
+                </div>
+
+                <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
                   <select
                     value={newTestCase.type}
-                    onChange={(e) =>
-                      setNewTestCase({
-                        ...newTestCase,
-                        type: e.target.value as "Positive Case" | "Negative Case" | "Corner Case",
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                    onChange={(e) => setNewTestCase((prev) => ({ ...prev, type: e.target.value }))}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   >
                     <option value="Positive Case">Positive Case</option>
                     <option value="Negative Case">Negative Case</option>
                     <option value="Corner Case">Corner Case</option>
                   </select>
                 </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                  <select
-                    value={newTestCase.priority}
-                    onChange={(e) =>
-                      setNewTestCase({ ...newTestCase, priority: e.target.value as "High" | "Medium" | "Low" })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-                  </select>
-                </div>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
+                <select
+                  value={newTestCase.priority}
+                  onChange={(e) => setNewTestCase((prev) => ({ ...prev, priority: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="High">High</option>
+                  <option value="Medium">Medium</option>
+                  <option value="Low">Low</option>
+                </select>
               </div>
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Preconditions</label>
-                <TextArea
+                <textarea
                   value={newTestCase.preconditions}
-                  onChange={(e) => setNewTestCase({ ...newTestCase, preconditions: e.target.value })}
-                  rows={3}
+                  onChange={(e) => setNewTestCase((prev) => ({ ...prev, preconditions: e.target.value }))}
+                  rows={2}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Enter preconditions"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Test Steps *</label>
-                {newTestCase.steps.map((step, index) => (
-                  <div key={index} className="flex mb-2">
-                    <div className="flex-shrink-0 w-8 text-right pr-2 pt-2 text-gray-500">{index + 1}.</div>
-                    <Input
-                      value={step}
-                      onChange={(e) => {
-                        const newSteps = [...newTestCase.steps]
-                        newSteps[index] = e.target.value
-                        setNewTestCase({ ...newTestCase, steps: newSteps })
-                      }}
-                      className="flex-1"
-                      placeholder="Enter test step"
-                    />
-                    <button
-                      onClick={() => {
-                        const newSteps = newTestCase.steps.filter((_, i) => i !== index)
-                        setNewTestCase({ ...newTestCase, steps: newSteps })
-                      }}
-                      className="ml-2 text-red-500 hover:text-red-700 p-2"
-                      disabled={newTestCase.steps.length === 1}
-                    >
-                      <FaTimes size={12} />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={() => {
-                    setNewTestCase({
-                      ...newTestCase,
-                      steps: [...newTestCase.steps, ""],
-                    })
-                  }}
-                  className="text-blue-500 hover:text-blue-700 text-sm"
-                >
-                  + Add Step
-                </button>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Expected Results *</label>
-                {newTestCase.expectedResults.map((result, index) => (
-                  <div key={index} className="flex mb-2">
-                    <div className="flex-shrink-0 w-8 text-right pr-2 pt-2 text-gray-500">{index + 1}.</div>
-                    <Input
-                      value={result}
-                      onChange={(e) => {
-                        const newResults = [...newTestCase.expectedResults]
-                        newResults[index] = e.target.value
-                        setNewTestCase({ ...newTestCase, expectedResults: newResults })
-                      }}
-                      className="flex-1"
-                      placeholder="Enter expected result"
-                    />
-                    <button
-                      onClick={() => {
-                        const newResults = newTestCase.expectedResults.filter((_, i) => i !== index)
-                        setNewTestCase({ ...newTestCase, expectedResults: newResults })
-                      }}
-                      className="ml-2 text-red-500 hover:text-red-700 p-2"
-                      disabled={newTestCase.expectedResults.length === 1}
-                    >
-                      <FaTimes size={12} />
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={() => {
-                    setNewTestCase({
-                      ...newTestCase,
-                      expectedResults: [...newTestCase.expectedResults, ""],
-                    })
-                  }}
-                  className="text-blue-500 hover:text-blue-700 text-sm"
-                >
-                  + Add Expected Result
-                </button>
-              </div>
-            </div>
-
-            <div className="flex justify-end space-x-3 mt-6">
-              <button
-                onClick={() => setShowAddDialog(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <Button type="primary" onClick={handleAddTestCase}>
-                Add Test Case
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Test Case Dialog */}
-      {editingTestCase && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-4xl w-full max-h-[90vh] overflow-y-auto edit-dialog">
-            <h3 className="text-lg font-medium mb-4">Edit Test Case</h3>
-            <div className="text-sm text-gray-500 mb-4">Editing for Version {version}</div>
-
-            <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                  <Input
-                    value={editingTestCase.name}
-                    onChange={(e) => setEditingTestCase({ ...editingTestCase, name: e.target.value })}
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Functional Module</label>
-                  <Input
-                    value={editingTestCase.functionalModule}
-                    onChange={(e) => setEditingTestCase({ ...editingTestCase, functionalModule: e.target.value })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                  <select
-                    value={editingTestCase.type}
-                    onChange={(e) =>
-                      setEditingTestCase({
-                        ...editingTestCase,
-                        type: e.target.value as "Positive Case" | "Negative Case" | "Corner Case",
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="Positive Case">Positive Case</option>
-                    <option value="Negative Case">Negative Case</option>
-                    <option value="Corner Case">Corner Case</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Priority</label>
-                  <select
-                    value={editingTestCase.priority}
-                    onChange={(e) =>
-                      setEditingTestCase({
-                        ...editingTestCase,
-                        priority: e.target.value as "High" | "Medium" | "Low",
-                      })
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-                  </select>
-                </div>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Preconditions</label>
-                <TextArea
-                  value={editingTestCase.preconditions}
-                  onChange={(e) => setEditingTestCase({ ...editingTestCase, preconditions: e.target.value })}
-                  rows={3}
+                <label className="block text-sm font-medium text-gray-700 mb-1">Test Steps</label>
+                <textarea
+                  value={newTestCase.steps.join("\n")}
+                  onChange={(e) => setNewTestCase((prev) => ({ ...prev, steps: e.target.value.split("\n") }))}
+                  rows={4}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter each step on a new line"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Steps</label>
-                {editingTestCase.steps.map((step, index) => (
-                  <div key={index} className="flex mb-2">
-                    <div className="flex-shrink-0 w-8 text-right pr-2 pt-2 text-gray-500">{index + 1}.</div>
-                    <Input
-                      value={step}
-                      onChange={(e) => {
-                        const newSteps = [...editingTestCase.steps]
-                        newSteps[index] = e.target.value
-                        setEditingTestCase({ ...editingTestCase, steps: newSteps })
-                      }}
-                      className="flex-1"
-                    />
-                    <button
-                      onClick={() => {
-                        const newSteps = editingTestCase.steps.filter((_, i) => i !== index)
-                        setEditingTestCase({ ...editingTestCase, steps: newSteps })
-                      }}
-                      className="ml-2 text-red-500 hover:text-red-700 p-2"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={() => {
-                    setEditingTestCase({
-                      ...editingTestCase,
-                      steps: [...editingTestCase.steps, ""],
-                    })
-                  }}
-                  className="text-blue-500 hover:text-blue-700 text-sm"
-                >
-                  + Add Step
-                </button>
-              </div>
-
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Expected Results</label>
-                {editingTestCase.expectedResults.map((result, index) => (
-                  <div key={index} className="flex mb-2">
-                    <div className="flex-shrink-0 w-8 text-right pr-2 pt-2 text-gray-500">{index + 1}.</div>
-                    <Input
-                      value={result}
-                      onChange={(e) => {
-                        const newResults = [...editingTestCase.expectedResults]
-                        newResults[index] = e.target.value
-                        setEditingTestCase({ ...editingTestCase, expectedResults: newResults })
-                      }}
-                      className="flex-1"
-                    />
-                    <button
-                      onClick={() => {
-                        const newResults = editingTestCase.expectedResults.filter((_, i) => i !== index)
-                        setEditingTestCase({ ...editingTestCase, expectedResults: newResults })
-                      }}
-                      className="ml-2 text-red-500 hover:text-red-700 p-2"
-                    >
-                      Remove
-                    </button>
-                  </div>
-                ))}
-                <button
-                  onClick={() => {
-                    setEditingTestCase({
-                      ...editingTestCase,
-                      expectedResults: [...editingTestCase.expectedResults, ""],
-                    })
-                  }}
-                  className="text-blue-500 hover:text-blue-700 text-sm"
-                >
-                  + Add Expected Result
-                </button>
+                <textarea
+                  value={newTestCase.expectedResults.join("\n")}
+                  onChange={(e) => setNewTestCase((prev) => ({ ...prev, expectedResults: e.target.value.split("\n") }))}
+                  rows={3}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  placeholder="Enter each expected result on a new line"
+                />
               </div>
             </div>
 
             <div className="flex justify-end space-x-3 mt-6">
               <button
-                onClick={() => setEditingTestCase(null)}
-                className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <Button type="primary" onClick={handleSaveTestCase}>
-                Save Changes
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Delete Test Case Confirmation Dialog */}
-      {deleteConfirmation && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-lg p-6 max-w-md w-full delete-test-case-dialog">
-            <h3 className="text-lg font-medium mb-4">Confirm Deletion</h3>
-            <p className="mb-2">Are you sure you want to delete this test case? This action cannot be undone.</p>
-            <p className="mb-4 text-sm text-gray-500">Deleting from Version {version}</p>
-            <div className="flex justify-end space-x-3">
-              <button
-                onClick={() => setDeleteConfirmation(null)}
+                onClick={() => setShowAddForm(false)}
                 className="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50"
               >
                 Cancel
               </button>
               <button
-                onClick={() => handleDeleteTestCase(deleteConfirmation)}
-                className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700"
+                onClick={handleAddTestCase}
+                disabled={!newTestCase.name.trim()}
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Delete
+                Add Test Case
               </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Draggable Original Content Dialog */}
-      {showDraggableOriginal && (
-        <div className="fixed inset-0 z-50">
-          <div
-            className="draggable-dialog absolute bg-white rounded-lg shadow-2xl border border-gray-300 w-96 max-h-[80vh] overflow-hidden"
-            style={{
-              left: `${dragPosition.x}px`,
-              top: `${dragPosition.y}px`,
-              cursor: isDragging ? "grabbing" : "default",
-            }}
-          >
-            {/* Draggable Header */}
-            <div
-              className="bg-gray-100 px-4 py-3 border-b border-gray-200 cursor-grab active:cursor-grabbing select-none"
-              onMouseDown={handleMouseDown}
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex items-center space-x-2">
-                  <FaFileAlt className="text-blue-600" size={14} />
-                  <h3 className="font-medium text-gray-900">Original Content</h3>
-                </div>
-                <button
-                  onClick={() => setShowDraggableOriginal(false)}
-                  className="text-gray-400 hover:text-gray-600 p-1 rounded hover:bg-gray-200"
-                >
-                  <FaTimes size={14} />
-                </button>
-              </div>
-            </div>
-
-            {/* Content */}
-            <div className="p-4 overflow-y-auto max-h-[calc(80vh-60px)]">
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Task Title</label>
-                  <div className="p-2 bg-gray-50 rounded text-sm">{selectedTask?.title || "No title available"}</div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">File Type</label>
-                  <div className="p-2 bg-gray-50 rounded text-sm flex items-center">
-                    {getFileIcon(selectedTask?.type || "Text")}
-                    <span className="ml-2">{selectedTask?.type || "Text"}</span>
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Date Created</label>
-                  <div className="p-2 bg-gray-50 rounded text-sm">
-                    {selectedTask?.date ? new Date(selectedTask.date).toLocaleDateString() : "No date available"}
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Original Content</label>
-                  <div className="p-3 bg-gray-50 rounded text-sm max-h-64 overflow-y-auto">
-                    <div className="space-y-2 text-gray-700">
-                      <p className="font-medium text-gray-800">Original Content:</p>
-                      <div className="pl-2 border-l-2 border-blue-200">
-                        <p>{selectedTask?.content || "No content available"}</p>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Footer */}
-            <div className="bg-gray-50 px-4 py-2 border-t border-gray-200">
-              <div className="text-xs text-gray-500 text-center">Drag the header to move this window</div>
             </div>
           </div>
         </div>

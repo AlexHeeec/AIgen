@@ -1,140 +1,113 @@
 "use client"
 
+import type React from "react"
 import { useState } from "react"
-import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { FaGoogle, FaLock, FaEnvelope } from "react-icons/fa"
 
-export default function LoginForm() {
-  const [loading, setLoading] = useState(false)
+interface LoginFormProps {
+  onLogin: (email: string, password: string) => void
+  isLoading: boolean
+}
+
+export default function LoginForm({ onLogin, isLoading }: LoginFormProps) {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [emailError, setEmailError] = useState("")
-  const [passwordError, setPasswordError] = useState("")
-  const router = useRouter()
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({})
 
-  const validateEmail = (email: string) => {
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string } = {}
+
     if (!email) {
-      setEmailError("Please input your email!")
-      return false
+      newErrors.email = "Email is required"
+    } else if (!/\S+@\S+\.\S+/.test(email)) {
+      newErrors.email = "Email is invalid"
     }
-    if (!/\S+@\S+\.\S+/.test(email)) {
-      setEmailError("Please enter a valid email!")
-      return false
-    }
-    setEmailError("")
-    return true
-  }
 
-  const validatePassword = (password: string) => {
     if (!password) {
-      setPasswordError("Please input your password!")
-      return false
+      newErrors.password = "Password is required"
+    } else if (password.length < 6) {
+      newErrors.password = "Password must be at least 6 characters"
     }
-    setPasswordError("")
-    return true
+
+    setErrors(newErrors)
+    return Object.keys(newErrors).length === 0
   }
 
-  const onFinish = async () => {
-    const isEmailValid = validateEmail(email)
-    const isPasswordValid = validatePassword(password)
-
-    if (!isEmailValid || !isPasswordValid) {
-      return
-    }
-
-    try {
-      setLoading(true)
-      // In a real app, you would call your authentication API here
-      console.log("Login with:", { email, password })
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Show success message
-      alert("Login successful!")
-      router.push("/workspace")
-    } catch (error) {
-      alert("Login failed. Please try again.")
-      console.error(error)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  const handleGoogleLogin = async () => {
-    try {
-      setLoading(true)
-      // In a real app, you would initiate Google OAuth flow here
-      console.log("Login with Google")
-
-      // Simulate API call
-      await new Promise((resolve) => setTimeout(resolve, 1000))
-
-      // Show success message
-      alert("Google login successful!")
-      router.push("/workspace")
-    } catch (error) {
-      alert("Google login failed. Please try again.")
-      console.error(error)
-    } finally {
-      setLoading(false)
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault()
+    if (validateForm()) {
+      onLogin(email, password)
     }
   }
 
   return (
-    <div className="bg-white p-8 rounded-lg shadow-md">
-      <form
-        onSubmit={(e) => {
-          e.preventDefault()
-          onFinish()
-        }}
-        className="space-y-4"
-      >
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+    <form className="space-y-6" onSubmit={handleSubmit}>
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          Email address
+        </label>
+        <div className="mt-1">
           <Input
+            id="email"
+            name="email"
             type="email"
-            prefix={<FaEnvelope />}
-            placeholder="Email"
+            autoComplete="email"
+            required
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            className={errors.email ? "border-red-300" : ""}
+            placeholder="Enter your email"
           />
-          {emailError && <p className="mt-1 text-sm text-red-600">{emailError}</p>}
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
-          <Input
-            type="password"
-            prefix={<FaLock />}
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-          />
-          {passwordError && <p className="mt-1 text-sm text-red-600">{passwordError}</p>}
-        </div>
-
-        <div>
-          <Button type="primary" htmlType="submit" className="w-full" loading={loading}>
-            Log in
-          </Button>
-        </div>
-      </form>
-
-      <div className="relative my-6">
-        <div className="absolute inset-0 flex items-center">
-          <div className="w-full border-t border-gray-300"></div>
-        </div>
-        <div className="relative flex justify-center text-sm">
-          <span className="px-2 bg-white text-gray-500">or</span>
+          {errors.email && <p className="mt-1 text-sm text-red-600">{errors.email}</p>}
         </div>
       </div>
 
-      <Button icon={<FaGoogle />} onClick={handleGoogleLogin} className="w-full" loading={loading}>
-        Continue with Google
-      </Button>
-    </div>
+      <div>
+        <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+          Password
+        </label>
+        <div className="mt-1">
+          <Input
+            id="password"
+            name="password"
+            type="password"
+            autoComplete="current-password"
+            required
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            className={errors.password ? "border-red-300" : ""}
+            placeholder="Enter your password"
+          />
+          {errors.password && <p className="mt-1 text-sm text-red-600">{errors.password}</p>}
+        </div>
+      </div>
+
+      <div className="flex items-center justify-between">
+        <div className="flex items-center">
+          <input
+            id="remember-me"
+            name="remember-me"
+            type="checkbox"
+            className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+          />
+          <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-900">
+            Remember me
+          </label>
+        </div>
+
+        <div className="text-sm">
+          <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
+            Forgot your password?
+          </a>
+        </div>
+      </div>
+
+      <div>
+        <Button type="submit" className="w-full" disabled={isLoading}>
+          {isLoading ? "Signing in..." : "Sign in"}
+        </Button>
+      </div>
+    </form>
   )
 }

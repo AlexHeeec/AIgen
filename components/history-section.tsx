@@ -1,20 +1,18 @@
 "use client"
-
-import { FaFilePdf, FaFileWord, FaFileAlt, FaTrash, FaHistory } from "react-icons/fa"
+import { FaTrash, FaFilePdf, FaFileWord, FaFileAlt } from "react-icons/fa"
 
 interface HistoryItem {
   id: string
   title: string
   date: string
   type: string
-  version: number
 }
 
 interface HistorySectionProps {
   historyItems: HistoryItem[]
   selectedTaskId: string | null
-  onSelectTask: (id: string) => void
-  onDeleteTask: (id: string) => void
+  onSelectTask: (taskId: string) => void
+  onDeleteTask: (taskId: string) => void
 }
 
 export default function HistorySection({
@@ -23,76 +21,60 @@ export default function HistorySection({
   onSelectTask,
   onDeleteTask,
 }: HistorySectionProps) {
-  const getIcon = (type: string) => {
+  const getFileIcon = (type: string) => {
     switch (type) {
       case "PDF":
-        return <FaFilePdf className="text-red-500" />
+        return <FaFilePdf className="text-red-500" size={14} />
       case "Word":
-        return <FaFileWord className="text-blue-500" />
+        return <FaFileWord className="text-blue-500" size={14} />
       default:
-        return <FaFileAlt className="text-green-500" />
+        return <FaFileAlt className="text-green-500" size={14} />
     }
   }
 
-  const getTagColor = (type: string) => {
-    switch (type) {
-      case "PDF":
-        return "bg-red-100 text-red-800"
-      case "Word":
-        return "bg-blue-100 text-blue-800"
-      default:
-        return "bg-green-100 text-green-800"
-    }
-  }
-
-  // Empty state when no history items
   if (historyItems.length === 0) {
     return (
-      <div className="border border-gray-200 rounded-md overflow-hidden">
-        <div className="flex flex-col items-center justify-center py-12 px-4">
-          <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
-            <FaHistory className="text-gray-400" size={24} />
-          </div>
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No History Yet</h3>
+      <div className="text-center py-8">
+        <div className="text-gray-400 mb-2">
+          <FaFileAlt size={32} className="mx-auto" />
         </div>
+        <p className="text-sm text-gray-500">No history yet</p>
+        <p className="text-xs text-gray-400 mt-1">Upload files to start generating test cases</p>
       </div>
     )
   }
 
   return (
-    <ul className="divide-y divide-gray-200 border border-gray-200 rounded-md overflow-hidden">
+    <div className="space-y-2">
       {historyItems.map((item) => (
-        <li
+        <div
           key={item.id}
-          className={`py-2 px-3 cursor-pointer hover:bg-gray-50 transition-colors ${
-            selectedTaskId === item.id ? "bg-blue-50 border-l-4 border-blue-500" : ""
+          className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+            selectedTaskId === item.id ? "bg-blue-50 border-blue-200" : "bg-gray-50 border-gray-200 hover:bg-gray-100"
           }`}
           onClick={() => onSelectTask(item.id)}
         >
-          <div className="flex items-start">
-            <div className="mr-2 mt-1">{getIcon(item.type)}</div>
+          <div className="flex items-start justify-between">
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">{item.title}</p>
-              <div className="flex items-center mt-1 flex-wrap">
-                <p className="text-xs text-gray-500 mr-2">{item.date}</p>
-                <span className={`px-1.5 py-0.5 rounded-full text-xs ${getTagColor(item.type)}`}>{item.type}</span>
-                <span className="ml-2 text-xs text-gray-500">v{item.version}</span>
+              <div className="flex items-center mb-1">
+                {getFileIcon(item.type)}
+                <span className="ml-2 text-xs text-gray-500">{new Date(item.date).toLocaleDateString()}</span>
               </div>
+              <h4 className="text-sm font-medium text-gray-900 truncate">{item.title}</h4>
             </div>
-            <div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation()
-                  onDeleteTask(item.id)
-                }}
-                className="text-gray-400 hover:text-red-600 transition-colors p-1"
-              >
-                <FaTrash size={14} />
-              </button>
-            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation()
+                onDeleteTask(item.id)
+              }}
+              className="ml-2 text-gray-400 hover:text-red-500 p-1 rounded transition-colors"
+              title="Delete task"
+            >
+              <FaTrash size={12} />
+            </button>
           </div>
-        </li>
+        </div>
       ))}
-    </ul>
+    </div>
   )
 }

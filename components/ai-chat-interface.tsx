@@ -1,9 +1,8 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useRef, useEffect } from "react"
-import { FaPaperPlane, FaRobot, FaUser, FaComments, FaMagic } from "react-icons/fa"
+import { FaPaperPlane, FaRobot, FaUser } from "react-icons/fa"
 import type { ExportConfig } from "@/utils/excel-export"
 
 interface Message {
@@ -22,24 +21,14 @@ interface AIChatInterfaceProps {
 }
 
 export default function AIChatInterface({
-  initialMessages = [],
+  initialMessages,
   onVersionSelect,
   onExportConfigChange,
   exportConfig,
 }: AIChatInterfaceProps) {
-  const defaultMessage = {
-    id: "default",
-    content:
-      "Hello! I'm your AI assistant. I can help you refine and adjust the generated test cases. What would you like to modify?",
-    sender: "ai",
-    timestamp: new Date(),
-    version: 1,
-  }
-
-  const [messages, setMessages] = useState<Message[]>(initialMessages.length > 0 ? initialMessages : [defaultMessage])
-
-  const [input, setInput] = useState("")
-  const [loading, setLoading] = useState(false)
+  const [messages, setMessages] = useState<Message[]>(initialMessages)
+  const [inputValue, setInputValue] = useState("")
+  const [isTyping, setIsTyping] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const scrollToBottom = () => {
@@ -50,117 +39,97 @@ export default function AIChatInterface({
     scrollToBottom()
   }, [messages])
 
-  // Update messages when initialMessages changes
   useEffect(() => {
-    if (initialMessages.length > 0) {
-      setMessages(initialMessages)
-    } else {
-      setMessages([defaultMessage])
-    }
+    setMessages(initialMessages)
   }, [initialMessages])
 
   const handleSendMessage = async () => {
-    if (!input.trim()) return
+    if (!inputValue.trim()) return
 
     const userMessage: Message = {
-      id: Date.now().toString(),
-      content: input,
+      id: `msg-${Date.now()}`,
+      content: inputValue,
       sender: "user",
       timestamp: new Date(),
     }
 
     setMessages((prev) => [...prev, userMessage])
-    setInput("")
-    setLoading(true)
+    setInputValue("")
+    setIsTyping(true)
 
-    try {
-      // Handle regular AI assistant interactions
-      await new Promise((resolve) => setTimeout(resolve, 1500))
-
-      // Get the latest version from messages
-      const latestVersion = Math.max(
-        ...messages.filter((msg) => msg.version !== undefined).map((msg) => msg.version as number),
-        0,
-      )
-
-      // Simulate a new version being created
-      const newVersion = latestVersion + 1
-
-      const aiResponses = [
-        `I've updated the test cases based on your request. The changes have been applied successfully. (Version ${newVersion})`,
-        `I've added more test cases for edge cases as requested. You can now see them in the test cases panel. (Version ${newVersion})`,
-        `I've modified the priority levels of the test cases as you suggested. The changes are now reflected in the test cases panel. (Version ${newVersion})`,
-        `I've updated the steps and expected results for the test cases as requested. The changes are now available. (Version ${newVersion})`,
-      ]
-
-      const randomResponse = aiResponses[Math.floor(Math.random() * aiResponses.length)]
-
+    // Simulate AI response
+    setTimeout(() => {
       const aiMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: randomResponse,
+        id: `ai-${Date.now()}`,
+        content: generateAIResponse(inputValue),
         sender: "ai",
         timestamp: new Date(),
-        version: newVersion,
       }
-
       setMessages((prev) => [...prev, aiMessage])
+      setIsTyping(false)
+    }, 1500)
+  }
 
-      // In a real app, you would update the version in your state management
-      // For now, we'll just simulate it
-      onVersionSelect(newVersion)
-    } catch (error) {
-      console.error("Error sending message:", error)
+  const generateAIResponse = (userInput: string): string => {
+    const input = userInput.toLowerCase()
 
-      // Send error message
-      const errorMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        content: "Sorry, I encountered an error processing your request. Please try again.",
-        sender: "ai",
-        timestamp: new Date(),
-      }
+    if (input.includes("export") || input.includes("download")) {
+      return "I can help you export the test cases. You can customize the export format, include/exclude specific columns, and choose the file format. Would you like me to show you the export options?"
+    }
 
-      setMessages((prev) => [...prev, errorMessage])
-    } finally {
-      setLoading(false)
+    if (input.includes("version") || input.includes("update")) {
+      return "I can help you create a new version of the test cases with updated requirements. Would you like me to generate an updated version based on new specifications?"
+    }
+
+    if (input.includes("add") || input.includes("create")) {
+      return "I can help you add new test cases. You can either describe the functionality you want to test, and I'll generate appropriate test cases, or you can manually add them using the Add button in the test cases table."
+    }
+
+    if (input.includes("priority") || input.includes("important")) {
+      return "Test case priorities help organize testing efforts. High priority cases should be tested first, Medium priority for standard functionality, and Low priority for edge cases. Would you like me to help you adjust the priorities?"
+    }
+
+    return "I'm here to help you with test case generation, management, and export. You can ask me about creating new test cases, updating existing ones, organizing by priority, or exporting your test suite. What would you like to work on?"
+  }
+
+  const handleKeyPress = (e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault()
+      handleSendMessage()
     }
   }
 
-  // Function to make version numbers clickable
-  const formatMessageContent = (content: string, version?: number) => {
-    if (!version) return content
-
-    // Replace version numbers with clickable spans
-    const versionRegex = /$$Version (\d+)$$/g
-    return content.replace(versionRegex, (match, versionNum) => {
-      return `<span class="version-link" data-version="${versionNum}">${match}</span>`
-    })
-  }
-
-  // Handle click on version numbers
-  const handleMessageClick = (e: React.MouseEvent) => {
-    const target = e.target as HTMLElement
-    if (target.classList.contains("version-link")) {
-      const version = Number.parseInt(target.getAttribute("data-version") || "0", 10)
-      if (version > 0) {
-        onVersionSelect(version)
-      }
-    }
-  }
-
-  // Show empty state when no messages (shouldn't happen with default message, but just in case)
   if (messages.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center h-full py-16 px-4">
-        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4">
-          <FaComments className="text-blue-500" size={24} />
+      <div className="flex flex-col h-full">
+        <div className="flex-1 flex items-center justify-center">
+          <div className="text-center">
+            <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-4 mx-auto">
+              <FaRobot className="text-blue-600" size={24} />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">AI Assistant Ready</h3>
+            <p className="text-gray-600 text-sm">Ask me about test cases, export options, or generating new versions</p>
+          </div>
         </div>
-        <h3 className="text-lg font-medium text-gray-900 mb-2">AI Assistant Ready</h3>
-        <p className="text-sm text-gray-500 text-center mb-4">
-          Start a conversation with the AI assistant to refine and improve your test cases.
-        </p>
-        <div className="flex items-center text-xs text-gray-400 bg-gray-50 px-3 py-2 rounded-lg">
-          <FaMagic className="mr-2" size={12} />
-          <span>Ask me to modify, add, or improve test cases</span>
+
+        <div className="border-t border-gray-200 p-3">
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              onKeyPress={handleKeyPress}
+              placeholder="Ask me anything about test cases..."
+              className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+            />
+            <button
+              onClick={handleSendMessage}
+              disabled={!inputValue.trim()}
+              className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+            >
+              <FaPaperPlane size={14} />
+            </button>
+          </div>
         </div>
       </div>
     )
@@ -168,13 +137,14 @@ export default function AIChatInterface({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex-1 overflow-y-auto mb-3 space-y-3">
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-4">
         {messages.map((message) => (
           <div key={message.id} className={`flex ${message.sender === "user" ? "justify-end" : "justify-start"}`}>
-            <div className={`flex max-w-[85%] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
+            <div className={`flex max-w-[80%] ${message.sender === "user" ? "flex-row-reverse" : "flex-row"}`}>
               <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-                  message.sender === "user" ? "bg-blue-500 ml-2" : "bg-gray-200 mr-2"
+                className={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center ${
+                  message.sender === "user" ? "bg-blue-600 ml-2" : "bg-gray-200 mr-2"
                 }`}
               >
                 {message.sender === "user" ? (
@@ -184,38 +154,38 @@ export default function AIChatInterface({
                 )}
               </div>
               <div
-                className={`p-2 rounded-lg text-sm ${
-                  message.sender === "user"
-                    ? "bg-blue-500 text-white rounded-tr-none"
-                    : "bg-gray-100 text-gray-800 rounded-tl-none"
+                className={`px-3 py-2 rounded-lg ${
+                  message.sender === "user" ? "bg-blue-600 text-white" : "bg-gray-100 text-gray-900"
                 }`}
-                onClick={handleMessageClick}
-                dangerouslySetInnerHTML={{
-                  __html: formatMessageContent(message.content, message.version),
-                }}
-              />
+              >
+                <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                <p className="text-xs mt-1 opacity-70">
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })}
+                </p>
+              </div>
             </div>
           </div>
         ))}
-        {loading && (
+
+        {isTyping && (
           <div className="flex justify-start">
-            <div className="flex max-w-[85%] flex-row">
-              <div className="w-7 h-7 rounded-full bg-gray-200 flex items-center justify-center mr-2 flex-shrink-0">
+            <div className="flex">
+              <div className="flex-shrink-0 w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center mr-2">
                 <FaRobot className="text-gray-600" size={12} />
               </div>
-              <div className="p-2 rounded-lg bg-gray-100 text-gray-800 rounded-tl-none">
+              <div className="bg-gray-100 px-3 py-2 rounded-lg">
                 <div className="flex space-x-1">
+                  <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
                   <div
                     className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: "0ms" }}
+                    style={{ animationDelay: "0.1s" }}
                   ></div>
                   <div
                     className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: "150ms" }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
-                    style={{ animationDelay: "300ms" }}
+                    style={{ animationDelay: "0.2s" }}
                   ></div>
                 </div>
               </div>
@@ -225,52 +195,23 @@ export default function AIChatInterface({
         <div ref={messagesEndRef} />
       </div>
 
-      <div className="mt-auto">
-        <div className="flex w-full">
+      {/* Input */}
+      <div className="border-t border-gray-200 p-3">
+        <div className="flex space-x-2">
           <input
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault()
-                handleSendMessage()
-              }
-            }}
-            placeholder="Type a message..."
-            disabled={loading}
-            className="w-[70%] py-2 px-3 border border-gray-300 rounded-l-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+            type="text"
+            value={inputValue}
+            onChange={(e) => setInputValue(e.target.value)}
+            onKeyPress={handleKeyPress}
+            placeholder="Ask me anything about test cases..."
+            className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
           />
           <button
             onClick={handleSendMessage}
-            disabled={!input.trim() || loading}
-            className={`w-[30%] py-2 px-3 rounded-r-md text-sm font-medium flex items-center justify-center ${
-              !input.trim() || loading
-                ? "bg-blue-300 text-white cursor-not-allowed"
-                : "bg-blue-500 text-white hover:bg-blue-600"
-            }`}
+            disabled={!inputValue.trim()}
+            className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
           >
-            {loading ? (
-              <span className="flex items-center justify-center">
-                <svg
-                  className="animate-spin -ml-1 mr-2 h-4 w-4 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  ></path>
-                </svg>
-                Sending...
-              </span>
-            ) : (
-              <>
-                <FaPaperPlane className="mr-1" size={12} /> Send
-              </>
-            )}
+            <FaPaperPlane size={14} />
           </button>
         </div>
       </div>

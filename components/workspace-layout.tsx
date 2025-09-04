@@ -31,8 +31,22 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
       <header className="bg-white px-6 py-3 shadow-sm flex items-center justify-between border-b border-gray-200">
         <div className="flex items-center">
           <h1 className="text-xl font-bold text-blue-500 m-0">AIGenTest</h1>
-          <div className="ml-6 border-b-2 border-blue-500 px-4 py-1">
-            <span className="text-blue-500 font-medium">Work Space</span>
+          <div className="ml-6 flex items-center space-x-6">
+            <button onClick={() => router.push("/homepage")} className="border-b-2 border-blue-500 px-4 py-1">
+              <span className="text-blue-500 font-medium">Home</span>
+            </button>
+            <button
+              onClick={() => router.push("/prd-list")}
+              className="px-4 py-1 text-gray-600 hover:text-blue-500 font-medium"
+            >
+              PRD Library
+            </button>
+            <button
+              onClick={() => router.push("/case-task-list")}
+              className="px-4 py-1 text-gray-600 hover:text-blue-500 font-medium"
+            >
+              TestCase Tasks
+            </button>
           </div>
         </div>
 
