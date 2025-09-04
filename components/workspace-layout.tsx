@@ -3,12 +3,13 @@
 import type React from "react"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { FaSignOutAlt, FaUser } from "react-icons/fa"
 
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false)
   const router = useRouter()
+  const pathname = usePathname()
 
   const handleLogout = () => {
     // In a real app, you would call your logout API here
@@ -26,26 +27,33 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
     }
   }
 
+  // Check if current path matches navigation item
+  const isActive = (path: string) => {
+    return pathname === path
+  }
+
+  const getNavButtonClass = (path: string) => {
+    const baseClass = "px-4 py-1 font-medium transition-colors"
+    if (isActive(path)) {
+      return `${baseClass} border-b-2 border-blue-500 text-blue-500`
+    }
+    return `${baseClass} text-gray-600 hover:text-blue-500`
+  }
+
   return (
     <div className="min-h-screen flex flex-col" onClick={handleClickOutside}>
       <header className="bg-white px-6 py-3 shadow-sm flex items-center justify-between border-b border-gray-200">
         <div className="flex items-center">
           <h1 className="text-xl font-bold text-blue-500 m-0">AIGenTest</h1>
           <div className="ml-6 flex items-center space-x-6">
-            <button onClick={() => router.push("/homepage")} className="border-b-2 border-blue-500 px-4 py-1">
-              <span className="text-blue-500 font-medium">Home</span>
+            <button onClick={() => router.push("/homepage")} className={getNavButtonClass("/homepage")}>
+              <span>Home</span>
             </button>
-            <button
-              onClick={() => router.push("/prd-list")}
-              className="px-4 py-1 text-gray-600 hover:text-blue-500 font-medium"
-            >
-              PRD Library
+            <button onClick={() => router.push("/prd-list")} className={getNavButtonClass("/prd-list")}>
+              <span>PRD Library</span>
             </button>
-            <button
-              onClick={() => router.push("/case-task-list")}
-              className="px-4 py-1 text-gray-600 hover:text-blue-500 font-medium"
-            >
-              TestCase Tasks
+            <button onClick={() => router.push("/case-task-list")} className={getNavButtonClass("/case-task-list")}>
+              <span>TestCase Tasks</span>
             </button>
           </div>
         </div>

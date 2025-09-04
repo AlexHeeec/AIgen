@@ -4,7 +4,7 @@ import type React from "react"
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import WorkspaceLayout from "@/components/workspace-layout"
-import { FaFileAlt, FaClipboardList, FaRocket, FaUpload, FaImage, FaTimes, FaArrowRight } from "react-icons/fa"
+import { FaFileAlt, FaClipboardList, FaUpload, FaImage, FaTimes, FaArrowRight } from "react-icons/fa"
 
 export default function HomePage() {
   const router = useRouter()
@@ -51,54 +51,83 @@ export default function HomePage() {
 
   return (
     <WorkspaceLayout>
-      <div className="col-span-12 flex flex-col h-full p-6">
-        <div className="max-w-4xl mx-auto w-full">
+      <div className="col-span-12 flex flex-col items-center justify-center h-full p-6">
+        <div className="max-w-4xl mx-auto text-center">
           {/* Header */}
-          <div className="text-center mb-12">
+          <div className="mb-12">
             <h1 className="text-4xl font-bold text-gray-900 mb-4">Welcome to AIGenTest</h1>
-            <p className="text-xl text-gray-600">AI-powered PRD and Test Case Generation Platform</p>
+            <p className="text-xl text-gray-600">
+              Streamline your product development with AI-powered PRD and test case generation
+            </p>
           </div>
 
           {/* Main Action Cards */}
           <div className="grid md:grid-cols-2 gap-8 mb-12">
             {/* Generate PRD Card */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 hover:shadow-xl transition-shadow">
-              <div className="flex items-center mb-6">
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
-                  <FaFileAlt className="text-blue-600" size={24} />
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mb-6">
+                  <FaFileAlt className="text-blue-600" size={32} />
                 </div>
-                <h2 className="text-2xl font-semibold text-gray-900">Generate PRD</h2>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4">Generate PRD</h3>
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                  Create comprehensive Product Requirements Documents with AI assistance. Define features, user stories,
+                  and technical specifications efficiently.
+                </p>
+                <button
+                  onClick={() => setShowPRDModal(true)}
+                  className="bg-blue-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center"
+                >
+                  Start Creating PRD
+                  <FaArrowRight className="ml-2" size={16} />
+                </button>
               </div>
-              <p className="text-gray-600 mb-6">
-                Create comprehensive Product Requirements Documents from your ideas, images, or existing content.
-              </p>
-              <button
-                onClick={() => setShowPRDModal(true)}
-                className="w-full bg-blue-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center justify-center"
-              >
-                <FaRocket className="mr-2" size={16} />
-                Start PRD Generation
-              </button>
             </div>
 
             {/* Generate Test Case Card */}
             <div className="bg-white rounded-xl shadow-lg border border-gray-200 p-8 hover:shadow-xl transition-shadow">
-              <div className="flex items-center mb-6">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mr-4">
-                  <FaClipboardList className="text-green-600" size={24} />
+              <div className="flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-6">
+                  <FaClipboardList className="text-green-600" size={32} />
                 </div>
-                <h2 className="text-2xl font-semibold text-gray-900">Generate Test Cases</h2>
+                <h3 className="text-2xl font-semibold text-gray-900 mb-4">Generate Test Cases</h3>
+                <p className="text-gray-600 mb-6 leading-relaxed">
+                  Transform your requirements into comprehensive test cases automatically. Upload documents or use
+                  existing PRDs to generate detailed test scenarios.
+                </p>
+                <button
+                  onClick={() => setShowTestCaseModal(true)}
+                  className="bg-green-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center"
+                >
+                  Start Generating Cases
+                  <FaArrowRight className="ml-2" size={16} />
+                </button>
               </div>
-              <p className="text-gray-600 mb-6">
-                Generate comprehensive test cases from existing PRDs or upload new requirements documents.
-              </p>
-              <button
-                onClick={() => setShowTestCaseModal(true)}
-                className="w-full bg-green-600 text-white py-3 px-6 rounded-lg font-medium hover:bg-green-700 transition-colors flex items-center justify-center"
-              >
-                <FaClipboardList className="mr-2" size={16} />
-                Start Test Case Generation
-              </button>
+            </div>
+          </div>
+
+          {/* Features Overview */}
+          <div className="bg-gray-50 rounded-xl p-8">
+            <h2 className="text-2xl font-semibold text-gray-900 mb-6">Why Choose AIGenTest?</h2>
+            <div className="grid md:grid-cols-3 gap-6 text-left">
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">AI-Powered Generation</h4>
+                <p className="text-gray-600 text-sm">
+                  Leverage advanced AI to create comprehensive PRDs and test cases from your requirements
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">Multiple Input Formats</h4>
+                <p className="text-gray-600 text-sm">
+                  Support for DOCX, TXT files, and platform-generated PRDs for maximum flexibility
+                </p>
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-900 mb-2">Export & Integration</h4>
+                <p className="text-gray-600 text-sm">
+                  Export your generated content in various formats and integrate with your existing workflow
+                </p>
+              </div>
             </div>
           </div>
         </div>

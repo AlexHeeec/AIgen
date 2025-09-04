@@ -13,7 +13,6 @@ const mockPRDs = [
     createdAt: "2025-01-15",
     updatedAt: "2025-01-20",
     creator: "John Doe",
-    status: "Published",
     tags: ["Authentication", "Security", "Backend"],
   },
   {
@@ -23,7 +22,6 @@ const mockPRDs = [
     createdAt: "2025-01-10",
     updatedAt: "2025-01-18",
     creator: "Jane Smith",
-    status: "Draft",
     tags: ["Payment", "Integration", "API"],
   },
   {
@@ -33,7 +31,6 @@ const mockPRDs = [
     createdAt: "2025-01-05",
     updatedAt: "2025-01-15",
     creator: "Mike Johnson",
-    status: "Published",
     tags: ["Analytics", "Dashboard", "Frontend"],
   },
   {
@@ -43,7 +40,6 @@ const mockPRDs = [
     createdAt: "2025-01-01",
     updatedAt: "2025-01-12",
     creator: "Sarah Wilson",
-    status: "Review",
     tags: ["Mobile", "Notifications", "Cross-platform"],
   },
 ]
@@ -52,35 +48,20 @@ export default function PRDListPage() {
   const router = useRouter()
   const [prds, setPRDs] = useState(mockPRDs)
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("All")
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<string | null>(null)
 
-  // Filter PRDs based on search term and status
+  // Filter PRDs based on search term
   const filteredPRDs = prds.filter((prd) => {
     const matchesSearch =
       prd.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prd.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
       prd.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-    const matchesStatus = statusFilter === "All" || prd.status === statusFilter
-    return matchesSearch && matchesStatus
+    return matchesSearch
   })
 
   const handleDeletePRD = (id: string) => {
     setPRDs(prds.filter((prd) => prd.id !== id))
     setShowDeleteConfirmation(null)
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Published":
-        return "bg-green-100 text-green-800"
-      case "Draft":
-        return "bg-yellow-100 text-yellow-800"
-      case "Review":
-        return "bg-blue-100 text-blue-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
   }
 
   return (
@@ -102,10 +83,9 @@ export default function PRDListPage() {
             </button>
           </div>
 
-          {/* Filters and Search */}
+          {/* Search */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
-              {/* Search */}
+            <div className="flex items-center justify-between">
               <div className="relative flex-1 max-w-md">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                 <input
@@ -116,20 +96,8 @@ export default function PRDListPage() {
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
-              {/* Status Filter */}
-              <div className="flex items-center space-x-4">
-                <label className="text-sm font-medium text-gray-700">Status:</label>
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  <option value="All">All</option>
-                  <option value="Published">Published</option>
-                  <option value="Draft">Draft</option>
-                  <option value="Review">Review</option>
-                </select>
+              <div className="text-sm text-gray-600">
+                {filteredPRDs.length} of {prds.length} PRDs
               </div>
             </div>
           </div>
@@ -146,9 +114,6 @@ export default function PRDListPage() {
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center">
                       <FaFileAlt className="text-blue-600 mr-2" size={20} />
-                      <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(prd.status)}`}>
-                        {prd.status}
-                      </span>
                     </div>
                   </div>
 
@@ -219,11 +184,9 @@ export default function PRDListPage() {
               <FaFileAlt className="mx-auto text-gray-400 mb-4" size={48} />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No PRDs found</h3>
               <p className="text-gray-600 mb-4">
-                {searchTerm || statusFilter !== "All"
-                  ? "Try adjusting your search or filter criteria"
-                  : "Get started by creating your first PRD"}
+                {searchTerm ? "Try adjusting your search criteria" : "Get started by creating your first PRD"}
               </p>
-              {!searchTerm && statusFilter === "All" && (
+              {!searchTerm && (
                 <button
                   onClick={() => router.push("/prd-generation")}
                   className="bg-blue-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-blue-700 transition-colors"

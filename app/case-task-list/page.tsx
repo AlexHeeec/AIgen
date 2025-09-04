@@ -2,19 +2,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import WorkspaceLayout from "@/components/workspace-layout"
-import {
-  FaClipboardList,
-  FaEye,
-  FaTrash,
-  FaPlus,
-  FaSearch,
-  FaCalendar,
-  FaUser,
-  FaCheckCircle,
-  FaClock,
-  FaExclamationCircle,
-  FaDownload,
-} from "react-icons/fa"
+import { FaClipboardList, FaEye, FaTrash, FaPlus, FaSearch, FaCalendar, FaUser, FaDownload } from "react-icons/fa"
 
 // Mock test case task data
 const mockTasks = [
@@ -26,9 +14,8 @@ const mockTasks = [
     createdAt: "2025-01-20",
     updatedAt: "2025-01-22",
     creator: "John Doe",
-    status: "Completed",
     testCaseCount: 25,
-    priority: "High",
+    tags: ["Authentication", "Security", "Login"],
   },
   {
     id: "2",
@@ -38,9 +25,8 @@ const mockTasks = [
     createdAt: "2025-01-18",
     updatedAt: "2025-01-21",
     creator: "Jane Smith",
-    status: "In Progress",
     testCaseCount: 18,
-    priority: "High",
+    tags: ["Payment", "Integration", "API"],
   },
   {
     id: "3",
@@ -50,9 +36,8 @@ const mockTasks = [
     createdAt: "2025-01-15",
     updatedAt: "2025-01-19",
     creator: "Mike Johnson",
-    status: "Completed",
     testCaseCount: 32,
-    priority: "Medium",
+    tags: ["Analytics", "Dashboard", "Visualization"],
   },
   {
     id: "4",
@@ -62,9 +47,8 @@ const mockTasks = [
     createdAt: "2025-01-12",
     updatedAt: "2025-01-16",
     creator: "Sarah Wilson",
-    status: "Failed",
-    testCaseCount: 0,
-    priority: "Low",
+    testCaseCount: 15,
+    tags: ["Mobile", "Notifications", "Cross-platform"],
   },
 ]
 
@@ -72,63 +56,21 @@ export default function CaseTaskListPage() {
   const router = useRouter()
   const [tasks, setTasks] = useState(mockTasks)
   const [searchTerm, setSearchTerm] = useState("")
-  const [statusFilter, setStatusFilter] = useState("All")
-  const [priorityFilter, setPriorityFilter] = useState("All")
   const [showDeleteConfirmation, setShowDeleteConfirmation] = useState<string | null>(null)
 
-  // Filter tasks based on search term, status, and priority
+  // Filter tasks based on search term
   const filteredTasks = tasks.filter((task) => {
     const matchesSearch =
       task.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       task.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      task.prdTitle.toLowerCase().includes(searchTerm.toLowerCase())
-    const matchesStatus = statusFilter === "All" || task.status === statusFilter
-    const matchesPriority = priorityFilter === "All" || task.priority === priorityFilter
-    return matchesSearch && matchesStatus && matchesPriority
+      task.prdTitle.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      task.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()))
+    return matchesSearch
   })
 
   const handleDeleteTask = (id: string) => {
     setTasks(tasks.filter((task) => task.id !== id))
     setShowDeleteConfirmation(null)
-  }
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return <FaCheckCircle className="text-green-600" size={16} />
-      case "In Progress":
-        return <FaClock className="text-blue-600" size={16} />
-      case "Failed":
-        return <FaExclamationCircle className="text-red-600" size={16} />
-      default:
-        return <FaClock className="text-gray-600" size={16} />
-    }
-  }
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return "bg-green-100 text-green-800"
-      case "In Progress":
-        return "bg-blue-100 text-blue-800"
-      case "Failed":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
-  }
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "High":
-        return "bg-red-100 text-red-800"
-      case "Medium":
-        return "bg-yellow-100 text-yellow-800"
-      case "Low":
-        return "bg-green-100 text-green-800"
-      default:
-        return "bg-gray-100 text-gray-800"
-    }
   }
 
   return (
@@ -150,10 +92,9 @@ export default function CaseTaskListPage() {
             </button>
           </div>
 
-          {/* Filters and Search */}
+          {/* Search */}
           <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-4 mb-6">
-            <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0">
-              {/* Search */}
+            <div className="flex items-center justify-between">
               <div className="relative flex-1 max-w-md">
                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
                 <input
@@ -164,112 +105,86 @@ export default function CaseTaskListPage() {
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
-
-              {/* Filters */}
-              <div className="flex items-center space-x-4">
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm font-medium text-gray-700">Status:</label>
-                  <select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="All">All</option>
-                    <option value="Completed">Completed</option>
-                    <option value="In Progress">In Progress</option>
-                    <option value="Failed">Failed</option>
-                  </select>
-                </div>
-                <div className="flex items-center space-x-2">
-                  <label className="text-sm font-medium text-gray-700">Priority:</label>
-                  <select
-                    value={priorityFilter}
-                    onChange={(e) => setPriorityFilter(e.target.value)}
-                    className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  >
-                    <option value="All">All</option>
-                    <option value="High">High</option>
-                    <option value="Medium">Medium</option>
-                    <option value="Low">Low</option>
-                  </select>
-                </div>
+              <div className="text-sm text-gray-600">
+                {filteredTasks.length} of {tasks.length} tasks
               </div>
             </div>
           </div>
 
-          {/* Task List */}
-          <div className="space-y-4">
+          {/* Task Grid */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredTasks.map((task) => (
               <div
                 key={task.id}
                 className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow"
               >
                 <div className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      {/* Header */}
-                      <div className="flex items-center mb-3">
-                        <FaClipboardList className="text-blue-600 mr-3" size={20} />
-                        <div className="flex items-center space-x-3">
-                          {getStatusIcon(task.status)}
-                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(task.status)}`}>
-                            {task.status}
-                          </span>
-                          <span
-                            className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(task.priority)}`}
-                          >
-                            {task.priority} Priority
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Title and Description */}
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">{task.title}</h3>
-                      <p className="text-gray-600 text-sm mb-2">
-                        Based on: <span className="font-medium">{task.prdTitle}</span>
-                      </p>
-                      <p className="text-gray-600 text-sm mb-4">{task.description}</p>
-
-                      {/* Meta Info */}
-                      <div className="flex items-center space-x-6 text-xs text-gray-500">
-                        <div className="flex items-center">
-                          <FaUser className="mr-1" size={10} />
-                          <span>Created by {task.creator}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <FaCalendar className="mr-1" size={10} />
-                          <span>Updated {new Date(task.updatedAt).toLocaleDateString()}</span>
-                        </div>
-                        <div className="flex items-center">
-                          <FaClipboardList className="mr-1" size={10} />
-                          <span>{task.testCaseCount} test cases</span>
-                        </div>
-                      </div>
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center">
+                      <FaClipboardList className="text-green-600 mr-2" size={20} />
                     </div>
+                  </div>
 
-                    {/* Actions */}
-                    <div className="flex items-center space-x-3 ml-6">
-                      {task.status === "Completed" && (
-                        <button
-                          onClick={() => {
-                            /* Handle export */
-                          }}
-                          className="flex items-center text-green-600 hover:text-green-700 text-sm font-medium px-3 py-1 border border-green-300 rounded hover:bg-green-50"
-                        >
-                          <FaDownload className="mr-1" size={12} />
-                          Export
-                        </button>
-                      )}
+                  {/* Title and Description */}
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">{task.title}</h3>
+                  <p className="text-gray-600 text-sm mb-2">
+                    Based on: <span className="font-medium">{task.prdTitle}</span>
+                  </p>
+                  <p className="text-gray-600 text-sm mb-4 line-clamp-3">{task.description}</p>
+
+                  {/* Tags */}
+                  <div className="flex flex-wrap gap-1 mb-4">
+                    {task.tags.slice(0, 3).map((tag) => (
+                      <span key={tag} className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                        {tag}
+                      </span>
+                    ))}
+                    {task.tags.length > 3 && (
+                      <span className="px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded">
+                        +{task.tags.length - 3}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Meta Info */}
+                  <div className="text-xs text-gray-500 mb-4 space-y-1">
+                    <div className="flex items-center">
+                      <FaUser className="mr-1" size={10} />
+                      <span>Created by {task.creator}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <FaCalendar className="mr-1" size={10} />
+                      <span>Updated {new Date(task.updatedAt).toLocaleDateString()}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <FaClipboardList className="mr-1" size={10} />
+                      <span>{task.testCaseCount} test cases</span>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="flex items-center justify-between pt-4 border-t border-gray-100">
+                    <button
+                      onClick={() => router.push(`/case-generation?task=${task.id}`)}
+                      className="flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium"
+                    >
+                      <FaEye className="mr-1" size={12} />
+                      View
+                    </button>
+                    <div className="flex items-center space-x-3">
                       <button
-                        onClick={() => router.push(`/case-generation?task=${task.id}`)}
-                        className="flex items-center text-blue-600 hover:text-blue-700 text-sm font-medium px-3 py-1 border border-blue-300 rounded hover:bg-blue-50"
+                        onClick={() => {
+                          /* Handle export */
+                        }}
+                        className="flex items-center text-green-600 hover:text-green-700 text-sm"
                       >
-                        <FaEye className="mr-1" size={12} />
-                        View
+                        <FaDownload className="mr-1" size={12} />
+                        Export
                       </button>
                       <button
                         onClick={() => setShowDeleteConfirmation(task.id)}
-                        className="flex items-center text-red-600 hover:text-red-700 text-sm px-3 py-1 border border-red-300 rounded hover:bg-red-50"
+                        className="flex items-center text-red-600 hover:text-red-700 text-sm"
                       >
                         <FaTrash className="mr-1" size={12} />
                         Delete
@@ -287,11 +202,11 @@ export default function CaseTaskListPage() {
               <FaClipboardList className="mx-auto text-gray-400 mb-4" size={48} />
               <h3 className="text-lg font-medium text-gray-900 mb-2">No tasks found</h3>
               <p className="text-gray-600 mb-4">
-                {searchTerm || statusFilter !== "All" || priorityFilter !== "All"
-                  ? "Try adjusting your search or filter criteria"
+                {searchTerm
+                  ? "Try adjusting your search criteria"
                   : "Get started by creating your first test case generation task"}
               </p>
-              {!searchTerm && statusFilter === "All" && priorityFilter === "All" && (
+              {!searchTerm && (
                 <button
                   onClick={() => router.push("/homepage")}
                   className="bg-green-600 text-white px-4 py-2 rounded-lg font-medium hover:bg-green-700 transition-colors"
